@@ -1,0 +1,17 @@
+{
+  "name": "bazi",
+  "version": "1.0.0",
+  "description": "八字排盘网站,基于 OpenFate 开源引擎",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@openfate/bazi-engine": "^1.1.2",
+    "@openfate/true-solar-time": "^4.0.2",
+    "express": "^5.2.1"
+  }
+}

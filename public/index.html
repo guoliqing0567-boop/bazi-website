@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>观命 · 八字排盘</title>
+<style>
+  :root {
+    --ink: #22302C;        /* 深墨绿 */
+    --paper: #F5F0E4;      /* 宣纸 */
+    --paper-2: #EDE6D4;
+    --cinnabar: #B8432F;   /* 朱砂 */
+    --faint: #8C8474;
+    --line: #D8CFBB;
+    /* 传统五行五色 */
+    --wood: #3F7A54; --fire: #B8432F; --earth: #A67C2E; --metal: #8B8578; --water: #33566E;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Songti SC", "Noto Serif SC", "STSong", serif;
+    background: var(--ink); color: var(--paper);
+    min-height: 100vh; max-width: 560px; margin: 0 auto; padding-bottom: 60px;
+  }
+  header { text-align: center; padding: 40px 20px 8px; }
+  h1 { font-size: 30px; letter-spacing: 14px; text-indent: 14px; font-weight: 700; }
+  .sub { color: rgba(245,240,228,.55); font-size: 13px; margin-top: 10px; letter-spacing: 3px; }
+  .seal {
+    display: inline-block; background: var(--cinnabar); color: var(--paper);
+    font-size: 12px; padding: 4px 8px; border-radius: 4px; letter-spacing: 2px; margin-top: 12px;
+  }
+
+  /* ------ 表单 ------ */
+  .form {
+    background: var(--paper); color: var(--ink);
+    border-radius: 18px; margin: 22px 18px; padding: 22px 20px;
+  }
+  .f-row { display: flex; gap: 10px; }
+  .f-row > div { flex: 1; }
+  label { font-size: 13px; color: var(--faint); display: block; margin: 12px 0 5px; letter-spacing: 1px; }
+  input, select {
+    width: 100%; border: 1px solid var(--line); background: #FBF8F0;
+    border-radius: 10px; padding: 11px 12px; font-size: 16px; font-family: inherit; color: var(--ink);
+  }
+  .toggle { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-top: 4px; }
+  .toggle button {
+    flex: 1; border: none; background: #FBF8F0; padding: 11px 0; font-size: 15px;
+    font-family: inherit; cursor: pointer; color: var(--faint);
+  }
+  .toggle button.on { background: var(--ink); color: var(--paper); }
+  .go {
+    width: 100%; margin-top: 20px; border: none; border-radius: 12px;
+    background: var(--cinnabar); color: var(--paper); font-size: 17px; letter-spacing: 6px; text-indent: 6px;
+    padding: 14px 0; font-family: inherit; cursor: pointer;
+  }
+  .err { color: var(--cinnabar); font-size: 14px; margin-top: 10px; text-align: center; }
+
+  /* ------ 命盘 ------ */
+  #result { display: none; margin: 0 18px; }
+  .meta {
+    background: var(--paper); color: var(--ink); border-radius: 18px 18px 0 0;
+    padding: 16px 20px 12px; font-size: 14px; line-height: 1.9; border-bottom: 1px dashed var(--line);
+  }
+  .meta b { color: var(--cinnabar); }
+  .board { background: var(--paper); color: var(--ink); padding: 16px 14px 20px; border-radius: 0 0 18px 18px; }
+  .cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .pillar { background: var(--paper-2); border-radius: 12px; padding: 10px 4px 12px; text-align: center; }
+  .pillar .t { font-size: 12px; color: var(--faint); letter-spacing: 2px; }
+  .pillar .god { font-size: 11px; color: var(--faint); margin-top: 6px; }
+  .han { font-size: 34px; font-weight: 700; line-height: 1.25; margin-top: 2px; }
+  .hidden-stems { margin-top: 8px; font-size: 11px; color: var(--faint); line-height: 1.7; }
+  .nayin { font-size: 11px; color: var(--faint); margin-top: 6px; border-top: 1px dashed var(--line); padding-top: 6px; }
+  .wood { color: var(--wood); } .fire { color: var(--fire); } .earth { color: var(--earth); }
+  .metal { color: var(--metal); } .water { color: var(--water); }
+
+  .section { background: var(--paper); color: var(--ink); border-radius: 18px; margin-top: 14px; padding: 18px 20px; }
+  .section h3 { font-size: 15px; letter-spacing: 3px; color: var(--cinnabar); margin-bottom: 12px; }
+  .bars .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
+  .bar-row .k { width: 34px; }
+  .bar-row .track { flex: 1; height: 10px; background: var(--paper-2); border-radius: 5px; overflow: hidden; }
+  .bar-row .fill { height: 100%; border-radius: 5px; }
+  .bar-row .n { width: 24px; text-align: right; color: var(--faint); font-size: 13px; }
+
+  .dayun { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+  .dy {
+    min-width: 76px; background: var(--paper-2); border-radius: 10px;
+    padding: 10px 6px; text-align: center; flex-shrink: 0;
+  }
+  .dy .gz { font-size: 20px; font-weight: 700; }
+  .dy .age { font-size: 11px; color: var(--faint); margin-top: 5px; line-height: 1.6; }
+  .dy.now { outline: 2px solid var(--cinnabar); }
+
+  .inter { font-size: 14px; line-height: 2; }
+  .inter .tag {
+    display: inline-block; background: var(--paper-2); border-radius: 6px;
+    padding: 1px 8px; margin: 2px 4px 2px 0; font-size: 13px;
+  }
+  .foot { text-align: center; color: rgba(245,240,228,.4); font-size: 11px; margin-top: 26px; line-height: 2; letter-spacing: 1px; padding: 0 24px; }
+  .foot a { color: rgba(245,240,228,.55); }
+  .again {
+    display: block; margin: 18px auto 0; background: none; border: 1px solid rgba(245,240,228,.35);
+    color: var(--paper); border-radius: 20px; padding: 9px 26px; font-size: 14px;
+    font-family: inherit; cursor: pointer; letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>观 命</h1>
+  <div class="sub">八字四柱 · 真太阳时排盘</div>
+  <div class="seal">排盘引擎 · 开源</div>
+</header>
+
+<!-- 输入 -->
+<div class="form" id="form">
+  <div class="toggle" id="cal-toggle">
+    <button class="on" data-v="solar">公历(阳历)</button>
+    <button data-v="lunar">农历(阴历)</button>
+  </div>
+  <div class="f-row">
+    <div><label>年</label><input id="i-year" type="number" inputmode="numeric" placeholder="1995"></div>
+    <div><label>月</label><input id="i-month" type="number" inputmode="numeric" placeholder="8"></div>
+    <div><label>日</label><input id="i-day" type="number" inputmode="numeric" placeholder="15"></div>
+  </div>
+  <div class="f-row">
+    <div><label>时(0-23)</label><input id="i-hour" type="number" inputmode="numeric" placeholder="10"></div>
+    <div><label>分</label><input id="i-minute" type="number" inputmode="numeric" placeholder="30"></div>
+  </div>
+  <label>性别</label>
+  <div class="toggle" id="g-toggle">
+    <button class="on" data-v="female">女</button>
+    <button data-v="male">男</button>
+  </div>
+  <label>出生地(用于真太阳时校正,越准越好)</label>
+  <select id="i-city">
+    <option value="116.4,8">北京 · 华北</option>
+    <option value="121.5,8">上海 · 华东</option>
+    <option value="113.3,8">广州 · 华南</option>
+    <option value="104.1,8">成都 · 西南</option>
+    <option value="114.2,8">香港</option>
+    <option value="121.6,8">台北</option>
+    <option value="104.9,7" selected>金边</option>
+    <option value="101.7,8">吉隆坡</option>
+    <option value="103.8,8">新加坡</option>
+    <option value="">不确定(不做校正)</option>
+  </select>
+  <button class="go" onclick="calc()">排 盘</button>
+  <div class="err" id="err"></div>
+</div>
+
+<!-- 命盘 -->
+<div id="result">
+  <div class="meta" id="meta"></div>
+  <div class="board">
+    <div class="cols" id="cols"></div>
+  </div>
+  <div class="section">
+    <h3>五行分布</h3>
+    <div class="bars" id="bars"></div>
+  </div>
+  <div class="section">
+    <h3>大运</h3>
+    <div class="dayun" id="dayun"></div>
+  </div>
+  <div class="section" id="inter-box">
+    <h3>地支互动</h3>
+    <div class="inter" id="inter"></div>
+  </div>
+  <button class="again" onclick="reset()">重新排盘</button>
+</div>
+
+<p class="foot">
+  排盘计算基于 OpenFate 开源引擎(@openfate/bazi-engine,MIT 协议)<br>
+  解读仅供参考 · 人生的选择权始终在你自己手里
+</p>
+
+<script>
+const $ = id => document.getElementById(id);
+const EL_CN = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+const PILLAR_CN = { year: "年柱", month: "月柱", day: "日柱", hour: "时柱" };
+
+// 切换按钮组
+function bindToggle(id) {
+  const box = $(id);
+  box.querySelectorAll("button").forEach(b => b.onclick = () => {
+    box.querySelectorAll("button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+  });
+}
+bindToggle("cal-toggle"); bindToggle("g-toggle");
+const toggleVal = id => $(id).querySelector(".on").dataset.v;
+
+async function calc() {
+  $("err").textContent = "";
+  const body = {
+    year: $("i-year").value, month: $("i-month").value, day: $("i-day").value,
+    hour: $("i-hour").value, minute: $("i-minute").value || 0,
+    gender: toggleVal("g-toggle"),
+    calendarType: toggleVal("cal-toggle"),
+  };
+  if (!body.year || !body.month || !body.day || $("i-hour").value === "") {
+    $("err").textContent = "请把年、月、日、时填完整";
+    return;
+  }
+  const city = $("i-city").value;
+  if (city) {
+    const [lng, tz] = city.split(",");
+    body.longitude = Number(lng); body.timezone = Number(tz);
+  }
+  try {
+    const r = await fetch("/api/bazi", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error);
+    render(data.chart);
+  } catch (e) {
+    $("err").textContent = e.message || "排盘失败,请重试";
+  }
+}
+
+function render(c) {
+  // 基本信息
+  const cal = c.calendar || {};
+  const lunar = cal.lunar || {};
+  const tst = c.solarTimeInfo || {};
+  $("meta").innerHTML =
+    `生肖属<b>${cal.zodiac || "—"}</b> · 日主 <b class="${c.dayMaster.element}">${c.dayMaster.char}${EL_CN[c.dayMaster.element]}</b>(${c.dayMaster.polarity === "yang" ? "阳" : "阴"})<br>` +
+    `农历 ${lunar.year || "?"} 年${lunar.isLeapMonth ? "闰" : ""} ${lunar.month || "?"} 月 ${lunar.day || "?"} 日` +
+    (tst.trueSolarTime ? ` · 真太阳时 ${tst.trueSolarTime}` : "");
+
+  // 四柱
+  $("cols").innerHTML = ["year", "month", "day", "hour"].map(k => {
+    const p = c.pillars[k];
+    const hid = (p.hiddenStems || []).map(h =>
+      `<span class="${h.element}">${h.stem}</span>·${h.tenGod}`).join("<br>");
+    return `
+      <div class="pillar">
+        <div class="t">${PILLAR_CN[k]}</div>
+        <div class="god">${p.stemTenGod}</div>
+        <div class="han ${p.element}">${p.stem}</div>
+        <div class="han ${p.branchElement}">${p.branch}</div>
+        <div class="hidden-stems">${hid}</div>
+        <div class="nayin">${p.naYin}<br>${p.growthStage}</div>
+      </div>`;
+  }).join("");
+
+  // 五行分布:统计天干 + 地支主气 + 藏干
+  const count = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
+  for (const k of ["year", "month", "day", "hour"]) {
+    const p = c.pillars[k];
+    count[p.element]++;
+    count[p.branchElement]++;
+    (p.hiddenStems || []).forEach(h => { if (!h.isMain) count[h.element] += 0.5; });
+  }
+  const max = Math.max(...Object.values(count));
+  const COLOR = { wood: "var(--wood)", fire: "var(--fire)", earth: "var(--earth)", metal: "var(--metal)", water: "var(--water)" };
+  $("bars").innerHTML = Object.entries(count).map(([el, n]) => `
+    <div class="bar-row">
+      <span class="k ${el}">${EL_CN[el]}</span>
+      <div class="track"><div class="fill" style="width:${(n / max) * 100}%;background:${COLOR[el]}"></div></div>
+      <span class="n">${n % 1 ? n.toFixed(1) : n}</span>
+    </div>`).join("");
+
+  // 大运
+  const nowYear = new Date().getFullYear();
+  const cycles = (c.daYun && c.daYun.cycles) || [];
+  $("dayun").innerHTML = cycles.slice(0, 8).map(d => `
+    <div class="dy ${nowYear >= d.startYear && nowYear <= d.endYear ? "now" : ""}">
+      <div class="gz">${d.ganZhi}</div>
+      <div class="age">${d.startAge}-${d.endAge} 岁<br>${d.startYear} 起<br>${d.stemTenGod}</div>
+    </div>`).join("");
+
+  // 地支互动
+  const CN = { CLASH: "相冲", COMBINATION_2: "六合", TRINE: "三合", DIRECTIONAL: "三会", PUNISHMENT: "相刑", DESTRUCTION: "相破", HARM: "相害" };
+  const inters = c.interactions || [];
+  $("inter").innerHTML = inters.length
+    ? inters.map(i => `<span class="tag">${(i.branches || []).join("")} ${CN[i.type] || i.type}</span>`).join("")
+    : `<span style="color:var(--faint)">命局中无明显刑冲合害</span>`;
+  $("inter-box").style.display = "block";
+
+  $("form").style.display = "none";
+  $("result").style.display = "block";
+  window.scrollTo(0, 0);
+}
+
+function reset() {
+  $("result").style.display = "none";
+  $("form").style.display = "block";
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
