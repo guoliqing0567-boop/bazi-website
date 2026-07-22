@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bazi-website-s8fk.onrender.com/sitemap.xml
