@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bazi.daimeng1129.org/sitemap.xml
