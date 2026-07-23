@@ -2,6 +2,14 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<!-- Google Analytics 访问统计 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MNXTKQ74NJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-MNXTKQ74NJ');
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>观命 · 免费八字排盘 | 真太阳时四柱排盘工具</title>
 <meta name="description" content="免费在线八字排盘工具,支持公历农历输入、全国363个城市真太阳时校正。四柱干支、十神藏干、纳音、五行分布、大运流年、刑冲合害一目了然。">
@@ -124,6 +132,15 @@
     color: var(--paper); border-radius: 20px; padding: 9px 26px; font-size: 14px;
     font-family: inherit; cursor: pointer; letter-spacing: 2px;
   }
+  /* ------ 广告位:现在是优雅占位,接入广告后把代码放进对应容器即可 ------ */
+  .ad-slot {
+    margin: 14px 18px 0; border-radius: 14px; overflow: hidden;
+    background: rgba(245,240,228,.06); border: 1px dashed rgba(245,240,228,.18);
+    min-height: 72px; display: flex; align-items: center; justify-content: center;
+  }
+  .ad-slot .ad-placeholder { color: rgba(245,240,228,.28); font-size: 11px; letter-spacing: 3px; }
+  .ad-slot.in-card { margin: 14px 0 0; background: rgba(34,48,44,.05); border-color: rgba(34,48,44,.15); }
+  .ad-slot.in-card .ad-placeholder { color: rgba(34,48,44,.25); }
 </style>
 </head>
 <body>
@@ -132,7 +149,16 @@
   <h1>观 命</h1>
   <div class="sub">八字四柱 · 真太阳时排盘</div>
   <div class="seal">排盘引擎 · 开源</div>
+  <nav style="margin-top:16px;font-size:14px;letter-spacing:2px">
+    <a href="/" style="color:var(--gold);text-decoration:none;margin:0 12px">排盘工具</a>
+    <a href="/articles" style="color:rgba(245,240,228,.7);text-decoration:none;margin:0 12px">命理知识</a>
+  </nav>
 </header>
+
+<!-- 广告位 1:顶部横幅(曝光最高)。接入 AdSense 后把广告代码贴在这个 div 里,并删除占位行 -->
+<div class="ad-slot" id="ad-top">
+  <span class="ad-placeholder">广告位 · AD</span>
+</div>
 
 <!-- 输入 -->
 <div class="form" id="form">
@@ -180,6 +206,29 @@
   <div class="section" id="inter-box">
     <h3>地支互动</h3>
     <div class="inter" id="inter"></div>
+  </div>
+  <!-- 广告位 2:命盘结果中部(用户停留最久)。接入后把广告代码贴进来并删除占位行 -->
+  <div class="ad-slot" style="margin-left:0;margin-right:0" id="ad-middle">
+    <span class="ad-placeholder">广告位 · AD</span>
+  </div>
+  <div class="section" id="reading-box">
+    <h3>命理解读</h3>
+    <div id="reading-intro" style="font-size:14px;color:var(--faint);line-height:1.8">
+      基于你的四柱、五行与大运,生成一份专属解读:性格、事业、感情、当前大运与养生建议。
+    </div>
+    <button class="go" id="reading-btn" style="margin-top:14px" onclick="getReading()">生成解读</button>
+    <div id="reading-result" style="display:none"></div>
+    <!-- 广告位 3:解读末尾(转化最好)。默认隐藏,解读生成后自动显示 -->
+    <div class="ad-slot in-card" id="ad-bottom" style="display:none">
+      <span class="ad-placeholder">广告位 · AD</span>
+    </div>
+  </div>
+  <div class="section">
+    <h3>延伸阅读</h3>
+    <a href="/article/shi-shen-ru-men" style="display:block;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.7;padding:8px 0;border-bottom:1px dashed var(--line)">十神是什么?比肩、食神、正财……一次看懂十种关系</a>
+    <a href="/article/wu-xing-qiang-ruo" style="display:block;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.7;padding:8px 0;border-bottom:1px dashed var(--line)">五行缺什么真的要补吗?先看懂日主强弱</a>
+    <a href="/article/da-yun-liu-nian" style="display:block;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.7;padding:8px 0">大运和流年怎么看?十年一步的人生节奏</a>
+    <a href="/articles" style="display:block;margin-top:12px;font-size:13px;color:var(--cinnabar);text-decoration:none">查看全部文章 →</a>
   </div>
   <button class="again" onclick="reset()">重新排盘</button>
 </div>
@@ -258,6 +307,8 @@ function bindToggle(id) {
 bindToggle("cal-toggle"); bindToggle("g-toggle");
 const toggleVal = id => $(id).querySelector(".on").dataset.v;
 
+let currentChart = null; // 当前命盘,供解读使用
+
 async function calc() {
   $("err").textContent = "";
   const body = {
@@ -289,6 +340,15 @@ async function calc() {
 }
 
 function render(c) {
+  currentChart = c;
+  // 重置解读区,准备接受新命盘的解读
+  $("reading-result").style.display = "none";
+  $("reading-result").innerHTML = "";
+  $("reading-intro").style.display = "block";
+  $("reading-btn").style.display = "block";
+  $("reading-btn").disabled = false;
+  $("reading-btn").textContent = "生成解读";
+  $("ad-bottom").style.display = "none";
   // 基本信息
   const cal = c.calendar || {};
   const lunar = cal.lunar || {};
@@ -351,6 +411,34 @@ function render(c) {
   $("form").style.display = "none";
   $("result").style.display = "block";
   window.scrollTo(0, 0);
+}
+
+async function getReading() {
+  if (!currentChart) return;
+  const btn = $("reading-btn");
+  btn.disabled = true;
+  btn.textContent = "正在推演命局,请稍候…";
+  try {
+    const r = await fetch("/api/interpret", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chart: currentChart }),
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || "解读失败");
+    $("reading-intro").style.display = "none";
+    btn.style.display = "none";
+    $("reading-result").innerHTML = data.sections.map(s => `
+      <div style="margin-top:16px">
+        <div style="font-size:14px;letter-spacing:2px;color:var(--cinnabar);border-left:3px solid var(--cinnabar);padding-left:10px">${s.title}</div>
+        <p style="font-size:14px;line-height:2;margin-top:8px;color:var(--ink)">${s.text}</p>
+      </div>`).join("") +
+      `<p style="font-size:11px;color:var(--faint);margin-top:18px;text-align:center;letter-spacing:1px">解读仅供参考与娱乐 · 人生的选择权始终在你自己手里</p>`;
+    $("reading-result").style.display = "block";
+    $("ad-bottom").style.display = "flex"; // 解读生成后显示末尾广告位
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "生成解读(点击重试)";
+  }
 }
 
 function reset() {
