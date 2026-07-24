@@ -41,7 +41,7 @@ body {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
   color: var(--ink);
   min-height: 100vh;
-  max-width: 620px;
+  max-width: 720px;
   margin: 0 auto;
   padding-bottom: 72px;
   line-height: 1.6;
@@ -138,7 +138,7 @@ select {
 
 /* 主按钮:朱砂印色 */
 .go {
-  display: block; width: 100%; margin-top: 26px;
+  display: block; width: 100%; max-width: 300px; margin: 26px auto 0;
   font-family: var(--serif); font-size: 17px; letter-spacing: 8px; text-indent: 8px;
   background: var(--seal); color: var(--paper);
   border: none; border-radius: 2px; padding: 15px 0; cursor: pointer;
@@ -326,6 +326,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
+}
+@media (min-width: 700px) {
+  main, .wrap { padding: 0 40px; }
+  header { padding-top: 46px; }
+  .wordmark h1 { font-size: 34px; }
+  .sheet { padding: 28px 24px 32px; }
+  .pillar .han { font-size: 44px; }
+  .block { margin-top: 34px; }
 }
 @media (max-width: 380px) {
   .wordmark h1 { font-size: 26px; letter-spacing: 10px; text-indent: 10px; }
