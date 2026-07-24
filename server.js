@@ -24,8 +24,8 @@ const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(
 // 文章页面通用外壳(与主站同一套宣纸+朱砂视觉)
 function page({ title, desc, keywords, canonical, body, nav }) {
   const navItems = [
-    ["/", "排盘"], ["/hehun.html", "合婚"], ["/today.html", "黄历"],
-    ["/wiki", "百科"], ["/articles", "文章"],
+    ["/", "排盘"], ["/hehun.html", "合婚"], ["/rige.html", "日主"],
+    ["/today.html", "黄历"], ["/wiki", "百科"], ["/articles", "文章"],
   ].map(([h, n]) => `<a href="${h}"${nav === h ? ' class="on"' : ''}>${n}</a>`).join("");
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -477,10 +477,61 @@ app.get("/tables/:key", (req, res, next) => {
   }));
 });
 
+// ============================================================
+//  日主人格测试:只需生日,不问时辰,作为低门槛入口
+// ============================================================
+
+const RIGE_TAGS = {
+  甲: ["扛事的人", "有原则", "认死理", "长期主义"],
+  乙: ["柔韧的人", "会借力", "适应力强", "以柔克刚"],
+  丙: ["发光的人", "热情", "藏不住话", "自带气场"],
+  丁: ["专注的人", "细腻", "会倾听", "慢工出细活"],
+  戊: ["靠谱的人", "稳重", "说到做到", "抗压王"],
+  己: ["滋养的人", "包容", "细致周到", "被低估的实干家"],
+  庚: ["果断的人", "讲义气", "行动派", "越挫越勇"],
+  辛: ["讲究的人", "审美好", "追求完美", "细节控"],
+  壬: ["奔流的人", "格局大", "适应变化", "不受拘束"],
+  癸: ["深水的人", "直觉准", "看得透", "藏得住"],
+};
+
+app.post("/api/rige", (req, res) => {
+  try {
+    const b = req.body || {};
+    const chart = calculateBaziChart({
+      year: Number(b.year), month: Number(b.month), day: Number(b.day),
+      hour: 12, minute: 0,                 // 日柱不依赖时辰,取正午避开子时换日争议
+      gender: b.gender === "male" ? "male" : "female",
+      calendarType: b.calendarType === "lunar" ? "lunar" : "solar",
+    });
+    const dm = chart.dayMaster;
+    const wiki = WIKI.TIANGAN.find(x => x.char === dm.char);
+    const cal = chart.calendar || {};
+    res.json({
+      ok: true,
+      dayMaster: dm,
+      dayPillar: chart.pillars.day.ganZhi,
+      zodiac: cal.zodiac,
+      lunar: cal.lunar,
+      image: wiki ? wiki.image : "",
+      brief: wiki ? wiki.brief : "",
+      person: wiki ? wiki.person : "",
+      strength: wiki ? wiki.strength : "",
+      caution: wiki ? wiki.caution : "",
+      fit: wiki ? wiki.fit : "",
+      tags: RIGE_TAGS[dm.char] || [],
+      wikiKey: wiki ? wiki.key : "",
+    });
+  } catch (e) {
+    const msg = e instanceof BaziInputError ? cnError(e, "请检查出生日期是否填写正确") : "测算失败,请稍后重试";
+    res.status(400).json({ ok: false, error: msg });
+  }
+});
+
 app.get("/sitemap.xml", (req, res) => {
   const urls = [
     { loc: `${SITE}/`, pri: "1.0", freq: "weekly" },
     { loc: `${SITE}/hehun.html`, pri: "0.9", freq: "monthly" },
+    { loc: `${SITE}/rige.html`, pri: "0.9", freq: "monthly" },
     { loc: `${SITE}/today.html`, pri: "0.9", freq: "daily" },
     { loc: `${SITE}/articles`, pri: "0.8", freq: "weekly" },
     { loc: `${SITE}/wiki`, pri: "0.8", freq: "monthly" },
@@ -502,6 +553,20 @@ app.get("/sitemap.xml", (req, res) => {
 app.use(express.static(path.join(__dirname, "public")));
 
 // 排盘接口:前端把出生信息发过来,返回完整命盘
+
+// 把引擎返回的英文报错转成用户看得懂的中文
+function cnError(e, fallback) {
+  const m = String((e && e.message) || "");
+  if (/lunar date does not exist/i.test(m)) return "这个农历日期不存在(该月可能只有 29 天),请检查后重填";
+  if (/year must be/i.test(m)) return "请填写 1800 至 2100 之间的年份";
+  if (/month must be/i.test(m)) return "月份请填 1 到 12 之间的数字";
+  if (/day must be/i.test(m)) return "日期填写有误,请检查该月是否有这一天";
+  if (/hour must be/i.test(m)) return "小时请填 0 到 23 之间的数字(24 小时制)";
+  if (/minute must be/i.test(m)) return "分钟请填 0 到 59 之间的数字";
+  if (/longitude|timezone/i.test(m)) return "出生地信息有误,请重新选择城市";
+  return fallback;
+}
+
 app.post("/api/bazi", (req, res) => {
   try {
     const b = req.body || {};
@@ -528,7 +593,7 @@ app.post("/api/bazi", (req, res) => {
       },
     });
   } catch (e) {
-    const msg = e instanceof BaziInputError ? e.message : "排盘失败,请检查输入的日期时间是否有效";
+    const msg = e instanceof BaziInputError ? cnError(e, "排盘失败,请检查输入的日期时间") : "排盘失败,请稍后重试";
     res.status(400).json({ ok: false, error: msg });
   }
 });
@@ -801,7 +866,7 @@ app.post("/api/hehun", (req, res) => {
     const ca = build(a || {}), cb = build(b || {});
     res.json({ ok: true, a: ca, b: cb, result: hehunAnalyze(ca, cb) });
   } catch (e) {
-    const msg = e instanceof BaziInputError ? e.message : "请检查双方的出生日期时间是否填写正确";
+    const msg = e instanceof BaziInputError ? cnError(e, "请检查双方的出生日期时间") : "测算失败,请稍后重试";
     res.status(400).json({ ok: false, error: msg });
   }
 });
