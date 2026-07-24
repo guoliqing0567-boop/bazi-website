@@ -151,6 +151,18 @@ const WIKI_CATS = {
     intro: "十神是以日主为中心,衡量命局中其他干支与你之间关系的一套坐标。看懂十神,才算真正开始读一张命盘。",
     label: i => `${i.name} · ${i.group}`,
   },
+  shengxiao: {
+    name: "十二生肖", items: WIKI.SHENGXIAO,
+    desc: "鼠牛虎兔龙蛇马羊猴鸡狗猪的性格特质、适合领域与生肖配对。",
+    intro: "生肖是十二地支的通俗化身,对应的是八字中的年支。它只占八个字里的一个,所以看性格可以参考,但别把「属相不合」当成定论。",
+    label: i => `属${i.char} · ${i.branch}${EL_CN_W[i.element]}`,
+  },
+  wuxing: {
+    name: "五行", items: WIKI.WUXING,
+    desc: "木火土金水的本性、对应季节方位、性格倾向、平衡之道与健康提示。",
+    intro: "五行是整套命理的底层语言。金木水火土既是五种物质状态,也是五种能量趋势——理解它们的生克关系,才能理解一张命盘为什么这样解读。",
+    label: i => `${i.char} · ${i.season} · ${i.direction}方`,
+  },
 };
 
 // 百科总目录
@@ -173,7 +185,14 @@ app.get("/wiki", (req, res) => {
     keywords: "命理百科,天干地支,十神详解,甲木,乙木,正官,七杀,地支藏干",
     canonical: `${SITE}/wiki`,
     nav: "/wiki",
-    body: `<div class="ad-slot"><span>广告位 · AD</span></div>${blocks}<a class="cta" href="/">去 排 盘</a>`,
+    body: `<div class="ad-slot"><span>广告位 · AD</span></div>${blocks}
+      <div class="block">
+        <div class="block-head"><h2>速查表</h2><span class="en">Reference</span></div>
+        ${Object.entries(TABLES).map(([k, v]) => `
+          <a class="entry" href="/tables/${k}"><div class="t">${v.name}</div>
+          <div class="d">${esc(v.desc)}</div></a>`).join("")}
+      </div>
+      <a class="cta" href="/">去 排 盘</a>`,
   }));
 });
 
@@ -235,6 +254,28 @@ app.get("/wiki/:cat/:key", (req, res, next) => {
       <h3>本性与象征</h3><p>${esc(i.nature)}</p>
       <h3>性格特质</h3><p>${esc(i.person)}</p>
       <h3>合冲刑害</h3><p>${esc(i.note)}</p>`;
+  } else if (req.params.cat === "shengxiao") {
+    sections = `
+      <div class="kv"><span>对应地支</span><span>${esc(i.branch)}</span></div>
+      <div class="kv"><span>五行</span><span>${EL_CN_W[i.element]}</span></div>
+      <div class="kv"><span>近年出生年份</span><span style="font-family:var(--sans);font-size:12px">${esc(i.years)}</span></div>
+      <h3>由来与象征</h3><p>${esc(i.nature)}</p>
+      <h3>性格特质</h3><p>${esc(i.person)}</p>
+      <h3>需要留意</h3><p>${esc(i.caution)}</p>
+      <h3>适合的领域</h3><p>${esc(i.fit)}</p>
+      <h3>生肖配对</h3><p>${esc(i.match)}</p>`;
+  } else if (req.params.cat === "wuxing") {
+    sections = `
+      <div class="kv"><span>对应季节</span><span>${esc(i.season)}</span></div>
+      <div class="kv"><span>方位</span><span>${esc(i.direction)}</span></div>
+      <div class="kv"><span>色彩</span><span>${esc(i.color)}</span></div>
+      <div class="kv"><span>对应脏腑</span><span>${esc(i.organ)}</span></div>
+      <div class="kv"><span>情志 / 五味</span><span>${esc(i.emotion)} · ${esc(i.taste)}</span></div>
+      <h3>本性</h3><p>${esc(i.nature)}</p>
+      <h3>性格倾向</h3><p>${esc(i.person)}</p>
+      <h3>平衡之道</h3><p>${esc(i.balance)}</p>
+      <h3>健康提示</h3><p>${esc(i.health)}</p>
+      <h3>生克关系</h3><p>${esc(i.relation)}</p>`;
   } else {
     sections = `
       <div class="kv"><span>所属类别</span><span>${esc(i.group)}</span></div>
@@ -247,10 +288,25 @@ app.get("/wiki/:cat/:key", (req, res, next) => {
       <h3>过弱时</h3><p>${esc(i.weak)}</p>`;
   }
 
+  const cat = req.params.cat;
+  const titleMap = {
+    tiangan:  `${name}是什么?${name}日主的性格与适合领域 · 观命`,
+    dizhi:    `${name}是什么意思?${name}的五行、生肖与时辰 · 观命`,
+    shishen:  `${name}是什么意思?${name}的性格、事业与感情 · 观命`,
+    shengxiao:`属${name}的人是什么性格?生肖${name}详解 · 观命`,
+    wuxing:   `五行属${name}是什么意思?${name}的性格与平衡之道 · 观命`,
+  };
+  const kwMap = {
+    tiangan:  `${name},${name}日主,${name}性格,${name}是什么五行,十天干`,
+    dizhi:    `${name},${name}是什么意思,${name}时是几点,${name}的五行,地支`,
+    shishen:  `${name},${name}是什么意思,${name}性格,${name}代表什么,十神`,
+    shengxiao:`属${name},属${name}的性格,生肖${name},${name}年出生,属${name}配对`,
+    wuxing:   `五行${name},属${name}的人,${name}命,五行缺${name},${name}的性格`,
+  };
   res.send(page({
-    title: `${name}是什么意思?${c.name}详解 · 观命`,
+    title: titleMap[cat] || `${name} · ${c.name}详解 · 观命`,
     desc: i.brief,
-    keywords: `${name},${name}是什么意思,${name}性格,${c.name}`,
+    keywords: kwMap[cat] || `${name},${c.name}`,
     canonical: `${SITE}/wiki/${req.params.cat}/${i.key}`,
     nav: "/wiki",
     body: `
@@ -270,6 +326,157 @@ app.get("/wiki/:cat/:key", (req, res, next) => {
   }));
 });
 
+// ============================================================
+//  速查表:六十甲子 / 年份对照 / 时辰 / 节气
+// ============================================================
+
+const STEMS10 = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+const BRANCH12 = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const ZODIAC12 = ["鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"];
+const NAYIN30 = [
+  "海中金","炉中火","大林木","路旁土","剑锋金","山头火","涧下水","城头土","白蜡金","杨柳木",
+  "泉中水","屋上土","霹雳火","松柏木","长流水","沙中金","山下火","平地木","壁上土","金箔金",
+  "覆灯火","天河水","大驿土","钗钏金","桑柘木","大溪水","沙中土","天上火","石榴木","大海水",
+];
+// 生成六十甲子:干支 + 纳音
+const JIAZI60 = Array.from({ length: 60 }, (_, n) => ({
+  n: n + 1,
+  gz: STEMS10[n % 10] + BRANCH12[n % 12],
+  nayin: NAYIN30[Math.floor(n / 2)],
+  zodiac: ZODIAC12[n % 12],
+}));
+
+const SHICHEN = [
+  { z:"子", t:"23:00 - 00:59", n:"夜半", d:"一阳初生,万物潜藏。此时入睡最养精神,古人称「子时觉」为一天中最重要的睡眠。" },
+  { z:"丑", t:"01:00 - 02:59", n:"鸡鸣", d:"肝经当令,是身体自我修复的关键时段,熬夜对肝的损耗在此刻最大。" },
+  { z:"寅", t:"03:00 - 04:59", n:"平旦", d:"阳气渐升,天将破晓。肺经当令,呼吸系统在此时最活跃。" },
+  { z:"卯", t:"05:00 - 06:59", n:"日出", d:"太阳初升,大肠经当令,是排便与晨起的自然时刻。" },
+  { z:"辰", t:"07:00 - 08:59", n:"食时", d:"胃经当令,一天中最适合进食早餐的时段,吸收效率最高。" },
+  { z:"巳", t:"09:00 - 10:59", n:"隅中", d:"脾经当令,精力充沛、思维清晰,适合处理最需要专注的工作。" },
+  { z:"午", t:"11:00 - 12:59", n:"日中", d:"阳气最盛而一阴初生。心经当令,小憩片刻对下午的状态帮助很大。" },
+  { z:"未", t:"13:00 - 14:59", n:"日昳", d:"小肠经当令,消化吸收的高峰,午餐宜在此前完成。" },
+  { z:"申", t:"15:00 - 16:59", n:"哺时", d:"膀胱经当令,适合喝水与轻度活动,也是下午效率的第二个高点。" },
+  { z:"酉", t:"17:00 - 18:59", n:"日入", d:"日落时分,肾经当令,宜收敛心神、准备结束一天的忙碌。" },
+  { z:"戌", t:"19:00 - 20:59", n:"黄昏", d:"心包经当令,适合放松、散步、与家人相处,情绪最容易平和。" },
+  { z:"亥", t:"21:00 - 22:59", n:"人定", d:"三焦经当令,万物归静。此时准备入睡,最合于自然节律。" },
+];
+
+const JIEQI24 = [
+  { n:"立春", m:"2月3-5日", g:"寅月起", d:"春之始,也是八字纪年的真正开端。此日之前出生仍算上一年。" },
+  { n:"雨水", m:"2月18-20日", g:"寅月中", d:"降水渐增,冰雪消融。" },
+  { n:"惊蛰", m:"3月5-7日", g:"卯月起", d:"春雷始鸣,蛰虫惊醒,阳气显著上升。" },
+  { n:"春分", m:"3月20-22日", g:"卯月中", d:"昼夜平分,木气最盛。" },
+  { n:"清明", m:"4月4-6日", g:"辰月起", d:"气清景明,春末转折。" },
+  { n:"谷雨", m:"4月19-21日", g:"辰月中", d:"雨生百谷,春季最后一个节气。" },
+  { n:"立夏", m:"5月5-7日", g:"巳月起", d:"夏之始,火气渐旺。" },
+  { n:"小满", m:"5月20-22日", g:"巳月中", d:"麦粒渐满而未熟。" },
+  { n:"芒种", m:"6月5-7日", g:"午月起", d:"有芒之谷可种,农事最忙。" },
+  { n:"夏至", m:"6月21-22日", g:"午月中", d:"白昼最长,阳极而一阴生。" },
+  { n:"小暑", m:"7月6-8日", g:"未月起", d:"暑气渐盛,尚未至极。" },
+  { n:"大暑", m:"7月22-24日", g:"未月中", d:"一年中最热的时段,土气最燥。" },
+  { n:"立秋", m:"8月7-9日", g:"申月起", d:"秋之始,金气初动,肃杀之气渐起。" },
+  { n:"处暑", m:"8月22-24日", g:"申月中", d:"暑气至此而止。" },
+  { n:"白露", m:"9月7-9日", g:"酉月起", d:"露凝而白,昼夜温差加大。" },
+  { n:"秋分", m:"9月22-24日", g:"酉月中", d:"昼夜再次平分,金气最纯。" },
+  { n:"寒露", m:"10月8-9日", g:"戌月起", d:"露气寒冷,将要凝结。" },
+  { n:"霜降", m:"10月23-24日", g:"戌月中", d:"初霜出现,秋季最后一个节气。" },
+  { n:"立冬", m:"11月7-8日", g:"亥月起", d:"冬之始,水气归藏。" },
+  { n:"小雪", m:"11月22-23日", g:"亥月中", d:"始降小雪,寒意渐深。" },
+  { n:"大雪", m:"12月6-8日", g:"子月起", d:"雪量增大,阴气极盛。" },
+  { n:"冬至", m:"12月21-23日", g:"子月中", d:"白昼最短,阴极而一阳生,是重要的转折点。" },
+  { n:"小寒", m:"1月5-7日", g:"丑月起", d:"寒气渐重但未至极。" },
+  { n:"大寒", m:"1月20-21日", g:"丑月中", d:"一年中最冷,也是二十四节气之末。" },
+];
+
+const TABLES = {
+  jiazi:   { name: "六十甲子纳音表", desc: "天干地支两两相配的六十个组合,各自对应的纳音五行与生肖。", kw: "六十甲子,纳音表,甲子纳音,干支表" },
+  years:   { name: "年份干支生肖对照表", desc: "1924 至 2043 年每一年对应的干支、生肖与纳音,查「某年属什么」一目了然。", kw: "年份干支对照,某年属什么,出生年份生肖,1995年属什么" },
+  shichen: { name: "十二时辰对照表", desc: "子丑寅卯十二时辰对应的现代时间、古称与养生要点。", kw: "十二时辰,子时是几点,时辰对照表,时辰养生" },
+  jieqi:   { name: "二十四节气表", desc: "二十四节气的公历日期区间、对应月建,以及在八字中的换月作用。", kw: "二十四节气,节气表,节气换月,立春,交节" },
+};
+
+// 速查表目录
+app.get("/tables", (req, res) => {
+  const items = Object.entries(TABLES).map(([k, v]) => `
+    <a class="entry" href="/tables/${k}">
+      <div class="t">${v.name}</div>
+      <div class="d">${esc(v.desc)}</div>
+    </a>`).join("");
+  res.send(page({
+    title: "命理速查表 · 六十甲子 / 年份生肖 / 时辰 / 节气 | 观命",
+    desc: "六十甲子纳音表、年份干支生肖对照表、十二时辰对照表、二十四节气表,免费查询。",
+    keywords: "命理速查,六十甲子表,年份生肖对照,时辰对照表,二十四节气表",
+    canonical: `${SITE}/tables`, nav: "/wiki",
+    body: `<div class="ad-slot"><span>广告位 · AD</span></div>
+      <div class="block">
+        <div class="block-head"><h2>速查表</h2><span class="en">Reference</span></div>
+        <p class="hint" style="margin-bottom:8px">四张常用对照表,不需要计算,直接查。</p>
+        ${items}
+      </div>
+      <a class="cta" href="/">去 排 盘</a>`,
+  }));
+});
+
+// 各速查表详情
+app.get("/tables/:key", (req, res, next) => {
+  const k = req.params.key, meta = TABLES[k];
+  if (!meta) return next();
+  let body = "";
+
+  if (k === "jiazi") {
+    const rows = JIAZI60.map(x => `
+      <div class="kv"><span style="font-family:var(--serif);font-size:16px;color:var(--ink)">${x.n}. ${x.gz}</span>
+      <span>${x.nayin} · 属${x.zodiac}</span></div>`).join("");
+    body = `<div class="block"><p style="font-size:15px;line-height:2.15">十天干与十二地支依次相配,阳干配阳支、阴干配阴支,循环六十次不重复,称为「六十甲子」。每两组干支共用一个纳音五行,合计三十个纳音名称。</p></div>
+      <div class="block">${rows}</div>`;
+  } else if (k === "years") {
+    const now = new Date().getFullYear();
+    const rows = [];
+    for (let y = 1924; y <= 2043; y++) {
+      const n = (y - 1924) % 60;
+      const j = JIAZI60[n];
+      rows.push(`<div class="kv"${y === now ? ' style="background:rgba(179,58,43,.07)"' : ''}>
+        <span style="font-family:var(--sans);font-size:14px;color:var(--ink)">${y}${y === now ? " · 今年" : ""}</span>
+        <span>${j.gz}年 · 属${j.zodiac} · ${j.nayin}</span></div>`);
+    }
+    body = `<div class="block"><p style="font-size:15px;line-height:2.15">下表按公历年份列出对应的干支、生肖与纳音。<b style="color:var(--seal);font-weight:400">请注意:命理以立春为一年之始</b>,出生在立春之前的人,年柱仍属上一年,不能只看公历年份。</p></div>
+      <div class="block">${rows.join("")}</div>`;
+  } else if (k === "shichen") {
+    body = `<div class="block"><p style="font-size:15px;line-height:2.15">一天分为十二个时辰,每个时辰两小时,以地支命名。八字中的时柱就由出生时辰决定——注意应使用<a href="/article/zhen-tai-yang-shi" style="color:var(--seal)">真太阳时</a>而非钟表时间。</p></div>
+      ${SHICHEN.map(s => `
+        <div class="block" style="margin-top:18px">
+          <div class="block-head"><h2>${s.z}时 · ${s.n}</h2><span class="en">${s.t}</span></div>
+          <p style="font-size:15px;line-height:2.1">${esc(s.d)}</p>
+        </div>`).join("")}`;
+  } else {
+    body = `<div class="block"><p style="font-size:15px;line-height:2.15">二十四节气按太阳黄经划分,每 15 度一个。其中十二个「节」是八字换月的分界点,十二个「气」在月中。日期每年略有浮动,以当年实际交节时刻为准。</p></div>
+      <div class="block">${JIEQI24.map(q => `
+        <div style="padding:14px 0;border-bottom:1px solid var(--line)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <span style="font-size:17px;font-weight:700">${q.n}</span>
+            <span style="font-family:var(--sans);font-size:12px;color:var(--ink-hint)">${q.m} · ${q.g}</span>
+          </div>
+          <p class="hint" style="margin-top:6px">${esc(q.d)}</p>
+        </div>`).join("")}</div>`;
+  }
+
+  res.send(page({
+    title: `${meta.name} · 免费查询 | 观命`,
+    desc: meta.desc, keywords: meta.kw,
+    canonical: `${SITE}/tables/${k}`, nav: "/wiki",
+    body: `
+      <div class="block">
+        <div class="block-head"><h2>${meta.name}</h2><span class="en">Reference</span></div>
+        <p class="hint">${esc(meta.desc)}</p>
+      </div>
+      <div class="ad-slot"><span>广告位 · AD</span></div>
+      ${body}
+      <div class="ad-slot"><span>广告位 · AD</span></div>
+      <a class="cta" href="/">用生辰排一张命盘</a>
+      <a class="back" href="/tables">← 返回速查表目录</a>`,
+  }));
+});
+
 app.get("/sitemap.xml", (req, res) => {
   const urls = [
     { loc: `${SITE}/`, pri: "1.0", freq: "weekly" },
@@ -277,6 +484,8 @@ app.get("/sitemap.xml", (req, res) => {
     { loc: `${SITE}/today.html`, pri: "0.9", freq: "daily" },
     { loc: `${SITE}/articles`, pri: "0.8", freq: "weekly" },
     { loc: `${SITE}/wiki`, pri: "0.8", freq: "monthly" },
+    { loc: `${SITE}/tables`, pri: "0.8", freq: "monthly" },
+    ...Object.keys(TABLES).map(k => ({ loc: `${SITE}/tables/${k}`, pri: "0.7", freq: "monthly" })),
     ...Object.keys(WIKI_CATS).map(k => ({ loc: `${SITE}/wiki/${k}`, pri: "0.7", freq: "monthly" })),
     ...Object.entries(WIKI_CATS).flatMap(([k, c]) =>
       c.items.map(i => ({ loc: `${SITE}/wiki/${k}/${i.key}`, pri: "0.6", freq: "monthly" }))),
