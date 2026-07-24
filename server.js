@@ -22,7 +22,11 @@ app.use(express.json());
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 // 文章页面通用外壳(与主站同一套宣纸+朱砂视觉)
-function page({ title, desc, keywords, canonical, body }) {
+function page({ title, desc, keywords, canonical, body, nav }) {
+  const navItems = [
+    ["/", "排盘"], ["/hehun.html", "合婚"], ["/today.html", "黄历"],
+    ["/wiki", "百科"], ["/articles", "文章"],
+  ].map(([h, n]) => `<a href="${h}"${nav === h ? ' class="on"' : ''}>${n}</a>`).join("");
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -45,50 +49,21 @@ function page({ title, desc, keywords, canonical, body }) {
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${canonical}">
 <meta property="og:locale" content="zh_CN">
-<style>
-  :root { --ink:#22302C; --paper:#F5F0E4; --paper-2:#EDE6D4; --cinnabar:#B8432F; --faint:#8C8474; --line:#D8CFBB; }
-  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-  body { font-family:"Songti SC","Noto Serif SC","STSong",serif; background:var(--ink); color:var(--paper);
-    min-height:100vh; max-width:680px; margin:0 auto; padding-bottom:60px; }
-  header { text-align:center; padding:36px 20px 6px; }
-  header a.logo { color:var(--paper); text-decoration:none; }
-  h1.site { font-size:26px; letter-spacing:12px; text-indent:12px; font-weight:700; }
-  .sub { color:rgba(245,240,228,.5); font-size:12px; margin-top:8px; letter-spacing:3px; }
-  nav { text-align:center; margin-top:16px; font-size:14px; letter-spacing:2px; }
-  nav a { color:rgba(245,240,228,.75); text-decoration:none; margin:0 12px; }
-  nav a:hover, nav a.on { color:var(--cinnabar); }
-  .card { background:var(--paper); color:var(--ink); border-radius:18px; margin:18px; padding:24px 22px; }
-  .card h2 { font-size:21px; line-height:1.6; margin-bottom:8px; }
-  .meta { color:var(--faint); font-size:12px; letter-spacing:1px; margin-bottom:16px; }
-  .card h3 { font-size:15px; letter-spacing:2px; color:var(--cinnabar); margin:22px 0 8px;
-    border-left:3px solid var(--cinnabar); padding-left:10px; }
-  .card p { font-size:15px; line-height:2.05; }
-  .list-item { display:block; text-decoration:none; color:var(--ink); background:var(--paper);
-    border-radius:16px; margin:0 18px 12px; padding:18px 20px; }
-  .list-item .t { font-size:17px; font-weight:700; line-height:1.5; }
-  .list-item .d { color:var(--faint); font-size:13px; line-height:1.8; margin-top:8px; }
-  .cta { display:block; text-align:center; background:var(--cinnabar); color:var(--paper);
-    text-decoration:none; border-radius:12px; padding:14px; margin:18px; font-size:16px;
-    letter-spacing:4px; text-indent:4px; }
-  .ad-slot { margin:14px 18px; border-radius:14px; min-height:72px; display:flex; align-items:center;
-    justify-content:center; background:rgba(245,240,228,.06); border:1px dashed rgba(245,240,228,.18); }
-  .ad-slot span { color:rgba(245,240,228,.28); font-size:11px; letter-spacing:3px; }
-  .foot { text-align:center; color:rgba(245,240,228,.4); font-size:11px; margin-top:26px;
-    line-height:2; letter-spacing:1px; padding:0 24px; }
-  .kv { display:flex; justify-content:space-between; font-size:14px; padding:7px 0;
-    border-bottom:1px dashed var(--line); }
-  .kv span:first-child { color:var(--faint); }
-  .card .kv:first-of-type { border-top:1px dashed var(--line); margin-top:14px; }
-  .foot a { color:rgba(245,240,228,.55); }
-</style>
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <header>
-  <a class="logo" href="/"><h1 class="site">观 命</h1></a>
-  <div class="sub">八字四柱 · 真太阳时排盘</div>
-  <nav><a href="/">排盘</a><a href="/hehun.html">合婚</a><a href="/today.html">黄历</a><a href="/wiki">百科</a><a href="/articles">文章</a></nav>
+  <a class="wordmark" href="/">
+    <h1>观命</h1>
+    <span class="stamp">命</span>
+  </a>
+  <div class="tagline">八字四柱 · 真太阳时排盘</div>
+  <hr class="rule-double">
 </header>
+<nav>${navItems}</nav>
+<main>
 ${body}
+</main>
 <p class="foot">
   排盘计算基于 OpenFate 开源引擎(@openfate/bazi-engine,MIT 协议)<br>
   内容仅供参考与娱乐 · 人生的选择权始终在你自己手里
@@ -100,7 +75,7 @@ ${body}
 // 文章列表页
 app.get("/articles", (req, res) => {
   const items = ARTICLES.map(a => `
-    <a class="list-item" href="/article/${a.slug}">
+    <a class="entry" href="/article/${a.slug}">
       <div class="t">${esc(a.title)}</div>
       <div class="d">${esc(a.desc)}</div>
     </a>`).join("");
@@ -109,10 +84,13 @@ app.get("/articles", (req, res) => {
     desc: "真太阳时、十神、五行强弱、大运流年……用大白话讲清楚八字里最常被搜索的问题。",
     keywords: "命理知识,八字入门,真太阳时,十神,五行,大运",
     canonical: `${SITE}/articles`,
+    nav: "/articles",
     body: `
-      <!-- 广告位:文章列表顶部 -->
       <div class="ad-slot"><span>广告位 · AD</span></div>
-      ${items}
+      <div class="block">
+        <div class="block-head"><h2>命理知识</h2><span class="en">${ARTICLES.length} Articles</span></div>
+        ${items}
+      </div>
       <a class="cta" href="/">去 排 盘</a>`,
   }));
 });
@@ -128,20 +106,20 @@ app.get("/article/:slug", (req, res, next) => {
     title: `${a.title} · 观命八字`,
     desc: a.desc, keywords: a.keywords,
     canonical: `${SITE}/article/${a.slug}`,
+    nav: "/articles",
     body: `
-      <div class="card">
+      <article class="prose block">
         <h2>${esc(a.title)}</h2>
         <div class="meta">${a.date} · 命理知识</div>
         ${content}
-      </div>
-      <!-- 广告位:文章末尾(读完自然位置) -->
+      </article>
       <div class="ad-slot"><span>广告位 · AD</span></div>
       <a class="cta" href="/">用你的生辰排一张命盘</a>
-      <a class="list-item" href="/article/${next_.slug}" style="margin-top:12px">
-        <div class="d">继续阅读</div>
+      <a class="next-link" href="/article/${next_.slug}">
+        <div class="lbl">继续阅读</div>
         <div class="t">${esc(next_.title)}</div>
       </a>
-      <p style="text-align:center;margin-top:14px"><a href="/articles" style="color:rgba(245,240,228,.6);font-size:13px">← 返回全部文章</a></p>`,
+      <a class="back" href="/articles">← 返回全部文章</a>`,
   }));
 });
 
@@ -177,20 +155,23 @@ const WIKI_CATS = {
 // 百科总目录
 app.get("/wiki", (req, res) => {
   const blocks = Object.entries(WIKI_CATS).map(([k, c]) => `
-    <div class="card">
-      <h2 style="font-size:19px">${c.name}</h2>
-      <p style="color:var(--faint);font-size:13px;line-height:1.9;margin:8px 0 14px">${esc(c.desc)}</p>
+    <div class="block">
+      <div class="block-head"><h2>${c.name}</h2><span class="en">${c.items.length} Entries</span></div>
+      <p class="hint" style="margin-bottom:16px">${esc(c.desc)}</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px">
-        ${c.items.map(i => `<a href="/wiki/${k}/${i.key}" style="display:inline-block;background:var(--paper-2);
-          color:var(--ink);text-decoration:none;border-radius:10px;padding:8px 14px;font-size:15px">${esc(i.char || i.name)}</a>`).join("")}
+        ${c.items.map(i => `<a href="/wiki/${k}/${i.key}" style="display:inline-block;
+          border:1px solid var(--line-2);color:var(--ink);text-decoration:none;
+          padding:9px 15px;font-size:17px;transition:background .18s"
+          onmouseover="this.style.background='rgba(31,29,26,.05)'"
+          onmouseout="this.style.background='transparent'">${esc(i.char || i.name)}</a>`).join("")}
       </div>
-      <a href="/wiki/${k}" style="display:inline-block;margin-top:14px;font-size:13px;color:var(--cinnabar);text-decoration:none">查看 ${c.name} 全部 →</a>
     </div>`).join("");
   res.send(page({
     title: "命理百科 · 天干地支十神详解 | 观命",
     desc: "十天干、十二地支、十神的完整详解:五行属性、性格特质、适合领域与相互关系,一处查清。",
     keywords: "命理百科,天干地支,十神详解,甲木,乙木,正官,七杀,地支藏干",
     canonical: `${SITE}/wiki`,
+    nav: "/wiki",
     body: `<div class="ad-slot"><span>广告位 · AD</span></div>${blocks}<a class="cta" href="/">去 排 盘</a>`,
   }));
 });
@@ -200,7 +181,7 @@ app.get("/wiki/:cat", (req, res, next) => {
   const c = WIKI_CATS[req.params.cat];
   if (!c) return next();
   const items = c.items.map(i => `
-    <a class="list-item" href="/wiki/${req.params.cat}/${i.key}">
+    <a class="entry" href="/wiki/${req.params.cat}/${i.key}">
       <div class="t">${esc(c.label(i))}</div>
       <div class="d">${esc(i.brief)}</div>
     </a>`).join("");
@@ -208,9 +189,14 @@ app.get("/wiki/:cat", (req, res, next) => {
     title: `${c.name}详解 · 观命命理百科`,
     desc: c.desc, keywords: `${c.name},${c.items.map(i => i.char || i.name).join(",")}`,
     canonical: `${SITE}/wiki/${req.params.cat}`,
-    body: `<div class="card"><h2 style="font-size:20px">${c.name}</h2>
-      <p style="margin-top:10px">${esc(c.intro)}</p></div>
-      <div class="ad-slot"><span>广告位 · AD</span></div>${items}
+    nav: "/wiki",
+    body: `
+      <div class="block">
+        <div class="block-head"><h2>${c.name}</h2><span class="en">${c.items.length} Entries</span></div>
+        <p style="font-size:15px;line-height:2.15">${esc(c.intro)}</p>
+      </div>
+      <div class="ad-slot"><span>广告位 · AD</span></div>
+      <div class="block">${items}</div>
       <a class="cta" href="/wiki">返回百科目录</a>`,
   }));
 });
@@ -265,22 +251,21 @@ app.get("/wiki/:cat/:key", (req, res, next) => {
     desc: i.brief,
     keywords: `${name},${name}是什么意思,${name}性格,${c.name}`,
     canonical: `${SITE}/wiki/${req.params.cat}/${i.key}`,
+    nav: "/wiki",
     body: `
-      <div class="card">
-        <h2 style="font-size:34px;letter-spacing:4px">${esc(name)}</h2>
-        <div class="meta">${esc(c.label(i))} · ${c.name}</div>
-        <p style="color:var(--faint)">${esc(i.brief)}</p>
+      <article class="prose block">
+        <span class="big-char">${esc(name)}</span>
+        <div class="meta" style="margin-top:0">${esc(c.label(i))} · ${c.name}</div>
+        <p class="hint" style="margin-top:12px;font-size:14px">${esc(i.brief)}</p>
         ${sections}
-      </div>
+      </article>
       <div class="ad-slot"><span>广告位 · AD</span></div>
       <a class="cta" href="/">排一张自己的命盘看看</a>
-      <a class="list-item" href="/wiki/${req.params.cat}/${nx.key}">
-        <div class="d">下一个</div>
+      <a class="next-link" href="/wiki/${req.params.cat}/${nx.key}">
+        <div class="lbl">下一个</div>
         <div class="t">${esc(c.label(nx))}</div>
       </a>
-      <p style="text-align:center;margin-top:14px">
-        <a href="/wiki/${req.params.cat}" style="color:rgba(245,240,228,.6);font-size:13px">← 返回${c.name}目录</a>
-      </p>`,
+      <a class="back" href="/wiki/${req.params.cat}">← 返回${c.name}目录</a>`,
   }));
 });
 
