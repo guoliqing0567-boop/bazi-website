@@ -57,7 +57,7 @@ function page({ title, desc, keywords, canonical, body, nav }) {
     <h1>观命</h1>
     <span class="stamp">命</span>
   </a>
-  <div class="tagline">八字四柱 · 真太阳时排盘</div>
+  <div class="tagline">八字四柱 · 真太阳时排盘<span class="free-badge">完全免费</span></div>
   <hr class="rule-double">
 </header>
 <nav>${navItems}</nav>
@@ -65,6 +65,7 @@ function page({ title, desc, keywords, canonical, body, nav }) {
 ${body}
 </main>
 <p class="foot">
+  <b style="color:var(--seal);font-weight:400">全站免费 · 不收费 · 不需要注册</b><br>
   排盘计算基于 OpenFate 开源引擎(@openfate/bazi-engine,MIT 协议)<br>
   内容仅供参考与娱乐 · 人生的选择权始终在你自己手里
 </p>
@@ -80,7 +81,7 @@ app.get("/articles", (req, res) => {
       <div class="d">${esc(a.desc)}</div>
     </a>`).join("");
   res.send(page({
-    title: "命理知识 · 观命八字",
+    title: "命理知识 · 免费八字入门文章 | 观命",
     desc: "真太阳时、十神、五行强弱、大运流年……用大白话讲清楚八字里最常被搜索的问题。",
     keywords: "命理知识,八字入门,真太阳时,十神,五行,大运",
     canonical: `${SITE}/articles`,
@@ -167,7 +168,7 @@ app.get("/wiki", (req, res) => {
       </div>
     </div>`).join("");
   res.send(page({
-    title: "命理百科 · 天干地支十神详解 | 观命",
+    title: "命理百科 · 天干地支十神详解(免费查询)| 观命",
     desc: "十天干、十二地支、十神的完整详解:五行属性、性格特质、适合领域与相互关系,一处查清。",
     keywords: "命理百科,天干地支,十神详解,甲木,乙木,正官,七杀,地支藏干",
     canonical: `${SITE}/wiki`,
