@@ -1,0 +1,335 @@
+/* ============================================================
+   观命 · 视觉系统
+   方向:木刻通书 —— 整页是一张老纸,红黑双色印刷,
+        命盘做成一张深色「命书」并盖朱砂印,是全站的视觉主角。
+   ============================================================ */
+
+:root {
+  /* 纸与墨 */
+  --paper:    #EDE4CF;  /* 陈年纸本 */
+  --paper-2:  #E4D9BE;  /* 纸的暗部,用于分区带 */
+  --paper-3:  #F4EEDE;  /* 纸的亮部,用于输入框 */
+  --ink:      #1F1D1A;  /* 温黑,正文 */
+  --ink-soft: #5C554A;  /* 次要文字 */
+  --ink-hint: #8B8371;  /* 提示文字 */
+  --seal:     #B33A2B;  /* 朱砂 */
+  --seal-deep:#8E2A1E;
+  --pine:     #26362E;  /* 松墨,命书底色 */
+  --pine-2:   #1B2822;
+  --brass:    #9C7A3C;  /* 赭金,小面积点缀 */
+  --line:     rgba(31,29,26,.16);
+  --line-2:   rgba(31,29,26,.30);
+
+  /* 五行(纸上) */
+  --wood:  #3D6B4A;  --fire:  #B33A2B;  --earth: #9C7A3C;
+  --metal: #63605A;  --water: #2F5068;
+  /* 五行(命书深底上) */
+  --wood-l:  #86B394; --fire-l:  #E28E76; --earth-l: #DCB672;
+  --metal-l: #C6C1B5; --water-l: #85A9C9;
+
+  --serif: "Songti SC", "STSong", "Noto Serif SC", "SimSun", serif;
+  --sans:  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: var(--serif);
+  background: var(--paper);
+  /* 极淡的纸纹 */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+  color: var(--ink);
+  min-height: 100vh;
+  max-width: 620px;
+  margin: 0 auto;
+  padding-bottom: 72px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 页眉:安静克制,把风头留给命盘 ---------- */
+header { padding: 34px 24px 0; text-align: center; }
+.wordmark {
+  display: inline-flex; align-items: center; gap: 14px;
+  color: var(--ink); text-decoration: none;
+}
+.wordmark h1 {
+  font-size: 30px; font-weight: 700; letter-spacing: 14px; text-indent: 14px;
+  line-height: 1;
+}
+.wordmark .stamp {
+  width: 34px; height: 34px; flex-shrink: 0;
+  background: var(--seal); color: var(--paper);
+  font-size: 12px; line-height: 34px; letter-spacing: 0;
+  border-radius: 3px; font-family: var(--serif);
+}
+.tagline {
+  font-family: var(--sans); font-size: 11px; letter-spacing: 4px;
+  color: var(--ink-hint); margin-top: 12px;
+}
+.rule-double {
+  margin: 16px 0 0; border: none; height: 3px;
+  border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2);
+}
+
+/* ---------- 导航:像书口的标签 ---------- */
+nav { display: flex; justify-content: center; flex-wrap: wrap; padding: 12px 12px 0; }
+nav a {
+  font-family: var(--sans); font-size: 13px; letter-spacing: 2px;
+  color: var(--ink-soft); text-decoration: none;
+  padding: 7px 13px; position: relative;
+  transition: color .18s;
+}
+nav a:hover { color: var(--ink); }
+nav a.on { color: var(--seal); }
+nav a.on::after {
+  content: ""; position: absolute; left: 13px; right: 13px; bottom: 2px;
+  height: 2px; background: var(--seal);
+}
+
+/* ---------- 区块通用 ---------- */
+main, .wrap { padding: 0 20px; }
+.block { margin-top: 26px; }
+.block-head {
+  display: flex; align-items: baseline; gap: 10px;
+  border-bottom: 1px solid var(--line-2); padding-bottom: 8px; margin-bottom: 16px;
+}
+.block-head h2 { font-size: 17px; letter-spacing: 4px; font-weight: 700; }
+.block-head .en {
+  font-family: var(--sans); font-size: 10px; letter-spacing: 2px;
+  color: var(--ink-hint); text-transform: uppercase; margin-left: auto;
+}
+
+/* ---------- 表单:像在印好的表格上填字 ---------- */
+.field-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 14px; }
+.field-grid.two { grid-template-columns: 1fr 1fr; }
+.field label, label.lab {
+  display: block; font-family: var(--sans); font-size: 11px;
+  letter-spacing: 2px; color: var(--ink-hint); margin-bottom: 5px;
+}
+input, select {
+  width: 100%; font-family: var(--sans); font-size: 16px; color: var(--ink);
+  background: transparent; border: none; border-bottom: 1px solid var(--line-2);
+  padding: 7px 2px; border-radius: 0;
+  transition: border-color .18s;
+}
+input:focus, select:focus { outline: none; border-bottom-color: var(--seal); }
+input::placeholder { color: rgba(31,29,26,.22); }
+select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-hint) 50%),
+                    linear-gradient(135deg, var(--ink-hint) 50%, transparent 50%);
+  background-position: right 8px center, right 3px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 18px;
+}
+
+/* 二选一开关:像盖章选项 */
+.toggle { display: inline-flex; border: 1px solid var(--line-2); border-radius: 2px; overflow: hidden; }
+.toggle button {
+  font-family: var(--sans); font-size: 14px; letter-spacing: 1px;
+  border: none; background: transparent; color: var(--ink-soft);
+  padding: 8px 20px; cursor: pointer; transition: background .18s, color .18s;
+}
+.toggle button + button { border-left: 1px solid var(--line-2); }
+.toggle button.on { background: var(--ink); color: var(--paper); }
+
+/* 主按钮:朱砂印色 */
+.go {
+  display: block; width: 100%; margin-top: 26px;
+  font-family: var(--serif); font-size: 17px; letter-spacing: 8px; text-indent: 8px;
+  background: var(--seal); color: var(--paper);
+  border: none; border-radius: 2px; padding: 15px 0; cursor: pointer;
+  transition: background .18s, transform .1s;
+}
+.go:hover { background: var(--seal-deep); }
+.go:active { transform: translateY(1px); }
+.go:disabled { opacity: .55; cursor: default; }
+.ghost {
+  display: block; margin: 22px auto 0; font-family: var(--sans); font-size: 13px;
+  letter-spacing: 2px; background: none; border: 1px solid var(--line-2);
+  color: var(--ink-soft); border-radius: 2px; padding: 9px 24px; cursor: pointer;
+  transition: border-color .18s, color .18s;
+}
+.ghost:hover { border-color: var(--ink); color: var(--ink); }
+.err { color: var(--seal); font-family: var(--sans); font-size: 13px; margin-top: 12px; text-align: center; }
+
+/* ============================================================
+   签名元素:命书 —— 一张盖了朱砂印的深色命盘
+   ============================================================ */
+.sheet {
+  position: relative; margin-top: 22px;
+  background: var(--pine);
+  background-image: linear-gradient(160deg, var(--pine) 0%, var(--pine-2) 100%);
+  color: var(--paper);
+  padding: 22px 16px 26px;
+  box-shadow: 0 10px 30px rgba(31,29,26,.22);
+}
+/* 命书四角的细框 */
+.sheet::before {
+  content: ""; position: absolute; inset: 8px;
+  border: 1px solid rgba(237,228,207,.20); pointer-events: none;
+}
+.sheet-meta {
+  text-align: center; font-size: 13px; line-height: 2;
+  color: rgba(237,228,207,.72); padding: 0 10px 16px;
+  border-bottom: 1px dashed rgba(237,228,207,.22);
+}
+.sheet-meta b { color: var(--paper); font-weight: 400; }
+.sheet-meta a { color: inherit; }
+
+/* 四柱:纵向排列的干支,格线像印好的表格 */
+.cols { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 16px; }
+.pillar { text-align: center; padding: 4px 2px 8px; position: relative; }
+.pillar + .pillar::before {
+  content: ""; position: absolute; left: 0; top: 6px; bottom: 6px;
+  width: 1px; background: rgba(237,228,207,.14);
+}
+.pillar .t {
+  font-family: var(--sans); font-size: 10px; letter-spacing: 3px;
+  color: rgba(237,228,207,.45);
+}
+.pillar .god {
+  font-family: var(--sans); font-size: 11px; color: rgba(237,228,207,.62);
+  margin-top: 8px; min-height: 15px;
+}
+.pillar .god a { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(237,228,207,.35); }
+.pillar .han {
+  font-size: 38px; font-weight: 700; line-height: 1.15; margin-top: 4px;
+  letter-spacing: 0;
+}
+.pillar .han a { text-decoration: none; color: inherit; }
+.pillar .hidden-stems {
+  font-family: var(--sans); font-size: 10px; line-height: 1.85; margin-top: 10px;
+  color: rgba(237,228,207,.55);
+}
+.pillar .nayin {
+  font-family: var(--sans); font-size: 10px; line-height: 1.7; margin-top: 10px;
+  padding-top: 8px; border-top: 1px dashed rgba(237,228,207,.18);
+  color: rgba(237,228,207,.45);
+}
+/* 五行着色(深底版本) */
+.sheet .wood { color: var(--wood-l); } .sheet .fire { color: var(--fire-l); }
+.sheet .earth { color: var(--earth-l); } .sheet .metal { color: var(--metal-l); }
+.sheet .water { color: var(--water-l); }
+
+/* 朱砂印:命书右下角,落一次章 */
+.seal-mark {
+  position: absolute; right: 18px; bottom: 16px;
+  width: 46px; height: 46px; border: 2px solid var(--seal);
+  color: var(--seal); font-size: 15px; line-height: 1.1; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  letter-spacing: 0; border-radius: 2px; opacity: .92;
+  transform-origin: center;
+  animation: stamp .5s cubic-bezier(.2,1.5,.4,1) both;
+}
+@keyframes stamp {
+  0%   { opacity: 0; transform: scale(1.9) rotate(-14deg); }
+  60%  { opacity: .92; transform: scale(.94) rotate(2deg); }
+  100% { opacity: .92; transform: scale(1) rotate(-3deg); }
+}
+
+/* ---------- 数据区块:五行 / 大运 / 互动 ---------- */
+.bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; }
+.bar-row .k { width: 22px; font-size: 16px; font-weight: 700; }
+.bar-row .track { flex: 1; height: 7px; background: rgba(31,29,26,.09); overflow: hidden; }
+.bar-row .fill { height: 100%; }
+.bar-row .n { width: 26px; text-align: right; font-family: var(--sans); font-size: 12px; color: var(--ink-hint); }
+.wood { color: var(--wood); } .fire { color: var(--fire); } .earth { color: var(--earth); }
+.metal { color: var(--metal); } .water { color: var(--water); }
+
+.dayun { display: flex; gap: 0; overflow-x: auto; padding-bottom: 6px; }
+.dy {
+  min-width: 74px; flex-shrink: 0; text-align: center; padding: 12px 6px;
+  border-right: 1px solid var(--line);
+}
+.dy:first-child { border-left: 1px solid var(--line); }
+.dy .gz { font-size: 21px; font-weight: 700; }
+.dy .age { font-family: var(--sans); font-size: 10px; line-height: 1.7; color: var(--ink-hint); margin-top: 6px; }
+.dy.now { background: rgba(179,58,43,.07); }
+.dy.now .gz { color: var(--seal); }
+
+.tag {
+  display: inline-block; font-family: var(--sans); font-size: 12px;
+  border: 1px solid var(--line-2); padding: 4px 10px; margin: 0 6px 6px 0;
+}
+.hint { font-family: var(--sans); font-size: 12px; color: var(--ink-hint); line-height: 1.8; }
+
+/* ---------- 解读 ---------- */
+.reading-sec { margin-top: 20px; }
+.reading-sec h4 {
+  font-size: 14px; letter-spacing: 3px; color: var(--seal); font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+}
+.reading-sec h4::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.reading-sec p { font-size: 15px; line-height: 2.1; margin-top: 9px; }
+
+/* ---------- 文章 / 百科 ---------- */
+.entry { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.entry:last-of-type { border-bottom: none; }
+a.entry { display: block; color: var(--ink); text-decoration: none; transition: opacity .18s; }
+a.entry:hover { opacity: .62; }
+.entry .t { font-size: 17px; line-height: 1.55; font-weight: 700; }
+.entry .d { font-family: var(--sans); font-size: 13px; line-height: 1.85; color: var(--ink-soft); margin-top: 7px; }
+.prose h2 { font-size: 23px; line-height: 1.5; }
+.prose .meta { font-family: var(--sans); font-size: 11px; letter-spacing: 2px; color: var(--ink-hint); margin-top: 10px; }
+.prose h3 {
+  font-size: 15px; letter-spacing: 3px; color: var(--seal); font-weight: 700;
+  margin: 26px 0 9px; display: flex; align-items: center; gap: 8px;
+}
+.prose h3::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.prose p { font-size: 15px; line-height: 2.15; }
+.kv {
+  display: flex; justify-content: space-between; font-family: var(--sans);
+  font-size: 13px; padding: 9px 0; border-bottom: 1px dashed var(--line);
+}
+.kv span:first-child { color: var(--ink-hint); letter-spacing: 1px; }
+.big-char {
+  font-size: 64px; font-weight: 700; line-height: 1; letter-spacing: 0;
+  display: inline-block; padding-bottom: 6px;
+}
+
+/* ---------- 引导按钮 ---------- */
+.cta {
+  display: block; text-align: center; text-decoration: none;
+  background: var(--ink); color: var(--paper);
+  font-size: 15px; letter-spacing: 5px; text-indent: 5px;
+  padding: 15px; margin-top: 26px; border-radius: 2px;
+  transition: background .18s;
+}
+.cta:hover { background: var(--pine); }
+.next-link { display: block; text-decoration: none; color: var(--ink); margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-2); }
+.next-link .lbl { font-family: var(--sans); font-size: 11px; letter-spacing: 3px; color: var(--ink-hint); }
+.next-link .t { font-size: 16px; font-weight: 700; margin-top: 6px; line-height: 1.5; }
+.back { display: block; text-align: center; font-family: var(--sans); font-size: 12px; letter-spacing: 2px; color: var(--ink-hint); text-decoration: none; margin-top: 22px; }
+
+/* ---------- 广告位 ---------- */
+.ad-slot {
+  margin-top: 24px; min-height: 76px; display: flex; align-items: center; justify-content: center;
+  border: 1px dashed var(--line-2); background: rgba(31,29,26,.02);
+}
+.ad-slot span { font-family: var(--sans); font-size: 10px; letter-spacing: 4px; color: rgba(31,29,26,.24); }
+
+/* ---------- 页脚 ---------- */
+.foot {
+  margin-top: 40px; padding: 22px 24px 0; border-top: 1px solid var(--line);
+  font-family: var(--sans); font-size: 11px; line-height: 2.1; letter-spacing: .5px;
+  color: var(--ink-hint); text-align: center;
+}
+.foot a { color: var(--ink-soft); }
+
+/* ---------- 可访问性与响应 ---------- */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--seal); outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+@media (max-width: 380px) {
+  .wordmark h1 { font-size: 26px; letter-spacing: 10px; text-indent: 10px; }
+  .pillar .han { font-size: 32px; }
+  .field-grid { gap: 10px; }
+  nav a { padding: 7px 9px; font-size: 12px; }
+}

@@ -20,140 +20,122 @@
 <meta property="og:description" content="输入双方生辰,从日主、五行、地支多维度分析契合度。">
 <meta property="og:url" content="https://bazi.daimeng1129.org/hehun.html">
 <meta property="og:locale" content="zh_CN">
+<link rel="stylesheet" href="/style.css">
 <style>
-  :root {
-    --ink:#22302C; --paper:#F5F0E4; --paper-2:#EDE6D4; --cinnabar:#B8432F;
-    --faint:#8C8474; --line:#D8CFBB; --gold:#E8C56B;
-    --wood:#3F7A54; --fire:#B8432F; --earth:#A67C2E; --metal:#8B8578; --water:#33566E;
-  }
-  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-  body { font-family:"Songti SC","Noto Serif SC","STSong",serif; background:var(--ink); color:var(--paper);
-    min-height:100vh; max-width:560px; margin:0 auto; padding-bottom:60px; }
-  header { text-align:center; padding:38px 20px 6px; }
-  header a.logo { color:var(--paper); text-decoration:none; }
-  h1.site { font-size:26px; letter-spacing:12px; text-indent:12px; font-weight:700; }
-  .sub { color:rgba(245,240,228,.5); font-size:12px; margin-top:8px; letter-spacing:3px; }
-  nav { text-align:center; margin-top:16px; font-size:14px; letter-spacing:2px; }
-  nav a { color:rgba(245,240,228,.7); text-decoration:none; margin:0 10px; }
-  nav a.on { color:var(--gold); }
-  .ad-slot { margin:14px 18px; border-radius:14px; min-height:72px; display:flex; align-items:center;
-    justify-content:center; background:rgba(245,240,228,.06); border:1px dashed rgba(245,240,228,.18); }
-  .ad-slot span { color:rgba(245,240,228,.28); font-size:11px; letter-spacing:3px; }
-  .form { background:var(--paper); color:var(--ink); border-radius:18px; margin:16px 18px; padding:20px; }
-  .who { font-size:15px; letter-spacing:3px; color:var(--cinnabar); border-left:3px solid var(--cinnabar);
-    padding-left:10px; margin-bottom:6px; }
-  .f-row { display:flex; gap:10px; }
-  .f-row > div { flex:1; }
-  label { font-size:13px; color:var(--faint); display:block; margin:12px 0 5px; letter-spacing:1px; }
-  input, select { width:100%; border:1px solid var(--line); background:#FBF8F0; border-radius:10px;
-    padding:11px 12px; font-size:16px; font-family:inherit; color:var(--ink); }
-  .toggle { display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-top:4px; }
-  .toggle button { flex:1; border:none; background:#FBF8F0; padding:11px 0; font-size:15px;
-    font-family:inherit; cursor:pointer; color:var(--faint); }
-  .toggle button.on { background:var(--ink); color:var(--paper); }
-  .go { width:calc(100% - 36px); margin:6px 18px 0; border:none; border-radius:12px; background:var(--cinnabar);
-    color:var(--paper); font-size:17px; letter-spacing:6px; text-indent:6px; padding:15px 0;
-    font-family:inherit; cursor:pointer; display:block; }
-  .err { color:#E8A090; font-size:14px; margin:10px 18px 0; text-align:center; }
-  #result { display:none; }
-  .score-card { background:var(--paper); color:var(--ink); border-radius:18px; margin:16px 18px;
-    padding:24px 20px; text-align:center; }
-  .score-num { font-size:52px; font-weight:700; color:var(--cinnabar); line-height:1; }
-  .score-num small { font-size:16px; }
-  .score-bar { height:8px; background:var(--paper-2); border-radius:4px; margin:16px 0 12px; overflow:hidden; }
-  .score-bar div { height:100%; background:linear-gradient(90deg,var(--gold),var(--cinnabar)); border-radius:4px; }
-  .verdict { font-size:14px; line-height:1.9; color:var(--ink); }
-  .pair { display:flex; gap:10px; margin:0 18px 12px; }
-  .pair .p { flex:1; background:var(--paper); color:var(--ink); border-radius:14px; padding:14px; text-align:center; }
-  .pair .p .who2 { font-size:12px; color:var(--faint); letter-spacing:2px; }
-  .pair .p .gz { font-size:15px; margin-top:8px; line-height:1.9; letter-spacing:1px; }
-  .pair .p .dm { font-size:12px; color:var(--faint); margin-top:6px; }
-  .section { background:var(--paper); color:var(--ink); border-radius:18px; margin:0 18px 12px; padding:18px 20px; }
-  .section h3 { font-size:14px; letter-spacing:2px; color:var(--cinnabar); margin-bottom:8px;
-    border-left:3px solid var(--cinnabar); padding-left:10px; }
-  .section p { font-size:14px; line-height:2; }
-  .section p b { color:var(--cinnabar); }
-  .again { display:block; margin:16px auto 0; background:none; border:1px solid rgba(245,240,228,.35);
-    color:var(--paper); border-radius:20px; padding:9px 26px; font-size:14px; font-family:inherit;
-    cursor:pointer; letter-spacing:2px; }
-  .foot { text-align:center; color:rgba(245,240,228,.4); font-size:11px; margin-top:26px;
-    line-height:2; letter-spacing:1px; padding:0 24px; }
+  /* 合婚页专有:契合度刻度盘 */
+  .score-panel { margin-top: 24px; text-align: center; padding: 26px 20px;
+    background: var(--pine); background-image: linear-gradient(160deg,var(--pine),var(--pine-2));
+    color: var(--paper); position: relative; box-shadow: 0 10px 30px rgba(31,29,26,.22); }
+  .score-panel::before { content:""; position:absolute; inset:8px;
+    border:1px solid rgba(237,228,207,.20); pointer-events:none; }
+  .score-panel .lbl { font-family: var(--sans); font-size: 11px; letter-spacing: 5px;
+    color: rgba(237,228,207,.55); }
+  .score-panel .num { font-size: 62px; font-weight: 700; line-height: 1; margin-top: 12px;
+    color: var(--fire-l); }
+  .score-panel .num small { font-size: 15px; letter-spacing: 2px; }
+  .score-panel .track { height: 3px; background: rgba(237,228,207,.16); margin: 20px auto 16px;
+    max-width: 260px; }
+  .score-panel .fill { height: 100%; background: var(--fire-l); transition: width .8s cubic-bezier(.2,.8,.3,1); }
+  .score-panel .verdict { font-size: 14px; line-height: 2; color: rgba(237,228,207,.85);
+    max-width: 380px; margin: 0 auto; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; margin-top: 20px; }
+  .pair .p { text-align: center; padding: 16px 10px; }
+  .pair .p + .p { border-left: 1px solid var(--line); }
+  .pair .who2 { font-family: var(--sans); font-size: 11px; letter-spacing: 3px; color: var(--ink-hint); }
+  .pair .gz { font-size: 17px; line-height: 2; margin-top: 8px; letter-spacing: 1px; }
+  .pair .dm { font-family: var(--sans); font-size: 12px; color: var(--ink-hint); margin-top: 6px; }
 </style>
 </head>
 <body>
 
 <header>
-  <a class="logo" href="/"><h1 class="site">观 命</h1></a>
-  <div class="sub">八字合婚 · 契合度测算</div>
-  <nav>
-    <a href="/">排盘</a>
-    <a href="/hehun.html" class="on">合婚</a>
-    <a href="/today.html">黄历</a>
-    <a href="/wiki">百科</a>
-    <a href="/articles">文章</a>
-  </nav>
+  <a class="wordmark" href="/">
+    <h1>观命</h1>
+    <span class="stamp">命</span>
+  </a>
+  <div class="tagline">八字合婚 · 契合度测算</div>
+  <hr class="rule-double">
 </header>
 
-<div class="ad-slot"><span>广告位 · AD</span></div>
+<nav>
+  <a href="/">排盘</a>
+  <a href="/hehun.html" class="on">合婚</a>
+  <a href="/today.html">黄历</a>
+  <a href="/wiki">百科</a>
+  <a href="/articles">文章</a>
+</nav>
 
-<div id="input-area">
-  <div class="form">
-    <div class="who">第一位 · 你</div>
-    <div class="toggle" id="cal-a">
-      <button class="on" data-v="solar">公历</button><button data-v="lunar">农历</button>
-    </div>
-    <div class="f-row">
-      <div><label>年</label><input id="a-year" type="number" inputmode="numeric" placeholder="1995"></div>
-      <div><label>月</label><input id="a-month" type="number" inputmode="numeric" placeholder="8"></div>
-      <div><label>日</label><input id="a-day" type="number" inputmode="numeric" placeholder="15"></div>
-      <div><label>时(0-23)</label><input id="a-hour" type="number" inputmode="numeric" placeholder="10"></div>
-    </div>
-    <label>性别</label>
-    <div class="toggle" id="g-a"><button class="on" data-v="female">女</button><button data-v="male">男</button></div>
-    <div class="f-row">
-      <div><label>省份/地区</label><select id="a-prov"></select></div>
-      <div><label>城市</label><select id="a-city"></select></div>
-    </div>
-  </div>
-
-  <div class="form">
-    <div class="who">第二位 · 对方</div>
-    <div class="toggle" id="cal-b">
-      <button class="on" data-v="solar">公历</button><button data-v="lunar">农历</button>
-    </div>
-    <div class="f-row">
-      <div><label>年</label><input id="b-year" type="number" inputmode="numeric" placeholder="1993"></div>
-      <div><label>月</label><input id="b-month" type="number" inputmode="numeric" placeholder="3"></div>
-      <div><label>日</label><input id="b-day" type="number" inputmode="numeric" placeholder="2"></div>
-      <div><label>时(0-23)</label><input id="b-hour" type="number" inputmode="numeric" placeholder="16"></div>
-    </div>
-    <label>性别</label>
-    <div class="toggle" id="g-b"><button data-v="female">女</button><button class="on" data-v="male">男</button></div>
-    <div class="f-row">
-      <div><label>省份/地区</label><select id="b-prov"></select></div>
-      <div><label>城市</label><select id="b-city"></select></div>
-    </div>
-  </div>
-
-  <button class="go" onclick="calc()">开 始 合 婚</button>
-  <div class="err" id="err"></div>
-</div>
-
-<div id="result">
-  <div class="score-card">
-    <div style="font-size:12px;letter-spacing:4px;color:var(--faint)">契 合 度</div>
-    <div class="score-num" id="score">—<small>分</small></div>
-    <div class="score-bar"><div id="bar" style="width:0"></div></div>
-    <div class="verdict" id="verdict"></div>
-  </div>
-  <div class="pair">
-    <div class="p"><div class="who2">你</div><div class="gz" id="a-gz"></div><div class="dm" id="a-dm"></div></div>
-    <div class="p"><div class="who2">对方</div><div class="gz" id="b-gz"></div><div class="dm" id="b-dm"></div></div>
-  </div>
-  <div id="items"></div>
+<main>
   <div class="ad-slot"><span>广告位 · AD</span></div>
-  <button class="again" onclick="reset()">重新测算</button>
-</div>
+
+  <div id="input-area">
+    <div class="block">
+      <div class="block-head"><h2>第一位 · 你</h2><span class="en">Person A</span></div>
+      <div class="toggle" id="cal-a"><button class="on" data-v="solar">公历</button><button data-v="lunar">农历</button></div>
+      <div class="field-grid" style="margin-top:20px">
+        <div class="field"><label>年</label><input id="a-year" type="number" inputmode="numeric" placeholder="1995"></div>
+        <div class="field"><label>月</label><input id="a-month" type="number" inputmode="numeric" placeholder="8"></div>
+        <div class="field"><label>日</label><input id="a-day" type="number" inputmode="numeric" placeholder="15"></div>
+        <div class="field"><label>时</label><input id="a-hour" type="number" inputmode="numeric" placeholder="10"></div>
+      </div>
+      <div class="field-grid two" style="margin-top:18px">
+        <div class="field"><label>性别</label>
+          <div class="toggle" id="g-a" style="margin-top:1px"><button class="on" data-v="female">女</button><button data-v="male">男</button></div>
+        </div>
+      </div>
+      <div class="field-grid two" style="margin-top:18px">
+        <div class="field"><label>出生省份</label><select id="a-prov"></select></div>
+        <div class="field"><label>出生城市</label><select id="a-city"></select></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-head"><h2>第二位 · 对方</h2><span class="en">Person B</span></div>
+      <div class="toggle" id="cal-b"><button class="on" data-v="solar">公历</button><button data-v="lunar">农历</button></div>
+      <div class="field-grid" style="margin-top:20px">
+        <div class="field"><label>年</label><input id="b-year" type="number" inputmode="numeric" placeholder="1993"></div>
+        <div class="field"><label>月</label><input id="b-month" type="number" inputmode="numeric" placeholder="3"></div>
+        <div class="field"><label>日</label><input id="b-day" type="number" inputmode="numeric" placeholder="2"></div>
+        <div class="field"><label>时</label><input id="b-hour" type="number" inputmode="numeric" placeholder="16"></div>
+      </div>
+      <div class="field-grid two" style="margin-top:18px">
+        <div class="field"><label>性别</label>
+          <div class="toggle" id="g-b" style="margin-top:1px"><button data-v="female">女</button><button class="on" data-v="male">男</button></div>
+        </div>
+      </div>
+      <div class="field-grid two" style="margin-top:18px">
+        <div class="field"><label>出生省份</label><select id="b-prov"></select></div>
+        <div class="field"><label>出生城市</label><select id="b-city"></select></div>
+      </div>
+    </div>
+
+    <button class="go" onclick="calc()">开 始 合 婚</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div id="result" style="display:none">
+    <div class="score-panel">
+      <div class="lbl">契 合 度</div>
+      <div class="num" id="score">—<small>分</small></div>
+      <div class="track"><div class="fill" id="bar" style="width:0"></div></div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+
+    <div class="pair">
+      <div class="p"><div class="who2">你</div><div class="gz" id="a-gz"></div><div class="dm" id="a-dm"></div></div>
+      <div class="p"><div class="who2">对方</div><div class="gz" id="b-gz"></div><div class="dm" id="b-dm"></div></div>
+    </div>
+
+    <div class="block">
+      <div class="block-head"><h2>逐项分析</h2><span class="en">Breakdown</span></div>
+      <div id="items"></div>
+    </div>
+
+    <div class="ad-slot"><span>广告位 · AD</span></div>
+    <a class="cta" href="/">排一张自己的完整命盘</a>
+    <button class="ghost" onclick="reset()">重新测算</button>
+  </div>
+</main>
 
 <p class="foot">
   排盘计算基于 OpenFate 开源引擎(@openfate/bazi-engine,MIT 协议)<br>
@@ -236,7 +218,7 @@ function render(d) {
   $("a-dm").textContent = dm(d.a);
   $("b-dm").textContent = dm(d.b);
   $("items").innerHTML = r.items.map(i =>
-    `<div class="section"><h3>${i.title}</h3><p>${i.text}</p></div>`).join("");
+    `<div class="reading-sec"><h4>${i.title}</h4><p>${i.text}</p></div>`).join("");
   $("input-area").style.display = "none";
   $("result").style.display = "block";
   window.scrollTo(0, 0);
