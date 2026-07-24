@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MNXTKQ74NJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-MNXTKQ74NJ');
+</script>
+<title>日主人格测试 · 你是十种人格中的哪一种(免费)| 观命</title>
+<meta name="description" content="只需输入出生日期,一秒测出你的日主天干与性格底色。甲木参天、丙火如日、辛金如玉——十种人格,你是哪一种?免费,无需注册。">
+<meta name="keywords" content="日主,日主查询,日主性格,我是什么命,天干性格测试,八字日主,免费测试">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://bazi.daimeng1129.org/rige.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="日主人格测试 · 你是十种人格中的哪一种">
+<meta property="og:description" content="只需生日,一秒测出你的性格底色。">
+<meta property="og:url" content="https://bazi.daimeng1129.org/rige.html">
+<meta property="og:locale" content="zh_CN">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .lead { font-size: 16px; line-height: 2.1; margin-top: 6px; }
+  .lead b { color: var(--seal); font-weight: 400; }
+  /* 结果主视觉 */
+  .rige-panel {
+    margin-top: 24px; padding: 40px 24px 34px; text-align: center; position: relative;
+    background: var(--pine); background-image: linear-gradient(160deg,var(--pine),var(--pine-2));
+    color: var(--paper); box-shadow: 0 10px 30px rgba(31,29,26,.22);
+  }
+  .rige-panel::before { content:""; position:absolute; inset:8px;
+    border:1px solid rgba(237,228,207,.2); pointer-events:none; }
+  .rige-panel .lbl { font-family: var(--sans); font-size: 11px; letter-spacing: 6px;
+    color: rgba(237,228,207,.5); }
+  .rige-char { font-size: 110px; font-weight: 700; line-height: 1.05; margin: 10px 0 4px; }
+  .rige-name { font-size: 21px; letter-spacing: 4px; }
+  .rige-image { font-family: var(--sans); font-size: 13px; letter-spacing: 2px;
+    color: rgba(237,228,207,.6); margin-top: 10px; }
+  .rige-tags { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top: 22px; }
+  .rige-tags span { font-family: var(--sans); font-size: 12px; letter-spacing: 1px;
+    border: 1px solid rgba(237,228,207,.35); color: rgba(237,228,207,.85); padding: 5px 12px; }
+  .rige-sub { font-family: var(--sans); font-size: 12px; color: rgba(237,228,207,.45); margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="wordmark" href="/">
+    <h1>观命</h1>
+    <span class="stamp">命</span>
+  </a>
+  <div class="tagline">日主人格测试<span class="free-badge">完全免费</span></div>
+  <hr class="rule-double">
+</header>
+
+<nav>
+  <a href="/">排盘</a>
+  <a href="/hehun.html">合婚</a>
+  <a href="/rige.html" class="on">日主</a>
+  <a href="/today.html">黄历</a>
+  <a href="/wiki">百科</a>
+  <a href="/articles">文章</a>
+</nav>
+
+<main>
+  <div class="ad-slot"><span>广告位 · AD</span></div>
+
+  <div id="input-area">
+    <div class="block">
+      <div class="block-head"><h2>你是哪一种人</h2><span class="en">Day Master</span></div>
+      <p class="lead">
+        八字里,出生那天的天干称为「日主」,代表你本人——是整张命盘的原点,也是性格的底色。
+        十个天干对应十种截然不同的人:<b>甲木如参天大树、丙火如日、辛金如玉、癸水如深泉</b>。
+      </p>
+      <p class="lead" style="margin-top:12px">
+        这个测试<b>只需要生日,不用知道出生时辰</b>,十秒出结果。
+      </p>
+
+      <div class="toggle" id="cal-toggle" style="margin-top:22px">
+        <button class="on" data-v="solar">公历</button>
+        <button data-v="lunar">农历</button>
+      </div>
+
+      <div class="field-grid" style="margin-top:20px;grid-template-columns:repeat(3,1fr)">
+        <div class="field"><label>年</label><input id="i-year" type="number" inputmode="numeric" placeholder="1995"></div>
+        <div class="field"><label>月</label><input id="i-month" type="number" inputmode="numeric" placeholder="8"></div>
+        <div class="field"><label>日</label><input id="i-day" type="number" inputmode="numeric" placeholder="15"></div>
+      </div>
+
+      <button class="go" onclick="calc()">测 一 下</button>
+      <p class="hint" style="text-align:center;margin-top:12px">免费,无需注册,结果立即显示</p>
+      <div class="err" id="err"></div>
+    </div>
+  </div>
+
+  <div id="result" style="display:none">
+    <div class="rige-panel">
+      <div class="lbl">你 的 日 主</div>
+      <div class="rige-char" id="r-char">—</div>
+      <div class="rige-name" id="r-name"></div>
+      <div class="rige-image" id="r-image"></div>
+      <div class="rige-tags" id="r-tags"></div>
+      <div class="rige-sub" id="r-sub"></div>
+    </div>
+
+    <div class="block">
+      <div class="block-head"><h2>你是这样的人</h2><span class="en">Character</span></div>
+      <p style="font-size:15px;line-height:2.15" id="r-person"></p>
+    </div>
+    <div class="block">
+      <div class="block-head"><h2>你的长处</h2><span class="en">Strength</span></div>
+      <p style="font-size:15px;line-height:2.15" id="r-strength"></p>
+    </div>
+    <div class="block">
+      <div class="block-head"><h2>需要留意</h2><span class="en">Caution</span></div>
+      <p style="font-size:15px;line-height:2.15" id="r-caution"></p>
+    </div>
+    <div class="block">
+      <div class="block-head"><h2>适合的领域</h2><span class="en">Fit</span></div>
+      <p style="font-size:15px;line-height:2.15" id="r-fit"></p>
+    </div>
+
+    <div class="ad-slot"><span>广告位 · AD</span></div>
+
+    <div class="act-row">
+      <button class="go" onclick="sharePoster()">生成分享图</button>
+      <button class="ghost" onclick="reset()">再测一个</button>
+    </div>
+
+    <div class="block">
+      <div class="block-head"><h2>想看得更细?</h2><span class="en">Next</span></div>
+      <p class="hint">日主只是命盘的原点。补上出生时辰,可以排出完整的四柱、十神、五行分布与大运——那才是一张完整的命盘。</p>
+      <a class="cta" href="/">排一张完整命盘</a>
+      <a class="entry" id="wiki-link" href="/wiki/tiangan" style="margin-top:8px">
+        <div class="t">读完整的天干详解 →</div>
+      </a>
+    </div>
+  </div>
+</main>
+
+<p class="foot">
+  <b style="color:var(--seal);font-weight:400">全站免费 · 不收费 · 不需要注册</b><br>
+  排盘计算基于 OpenFate 开源引擎(@openfate/bazi-engine,MIT 协议)<br>
+  内容仅供参考与娱乐 · 人生的选择权始终在你自己手里
+</p>
+
+<script src="/share.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const EL_CN = { wood:"木", fire:"火", earth:"土", metal:"金", water:"水" };
+let lastResult = null;
+
+const box = $("cal-toggle");
+box.querySelectorAll("button").forEach(b => b.onclick = () => {
+  box.querySelectorAll("button").forEach(x => x.classList.remove("on"));
+  b.classList.add("on");
+});
+
+async function calc() {
+  $("err").textContent = "";
+  const body = {
+    year: $("i-year").value, month: $("i-month").value, day: $("i-day").value,
+    calendarType: box.querySelector(".on").dataset.v,
+  };
+  if (!body.year || !body.month || !body.day) {
+    $("err").textContent = "请把出生年月日填完整";
+    return;
+  }
+  try {
+    const r = await fetch("/api/rige", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+    render(d);
+  } catch (e) {
+    $("err").textContent = e.message || "测算失败,请重试";
+  }
+}
+
+function render(d) {
+  lastResult = d;
+  const el = d.dayMaster.element;
+  $("r-char").textContent = d.dayMaster.char;
+  $("r-char").className = "rige-char " + el;
+  $("r-name").textContent = `${d.dayMaster.char}${EL_CN[el]} · ${d.dayMaster.polarity === "yang" ? "阳" : "阴"}`;
+  $("r-image").textContent = d.image;
+  $("r-tags").innerHTML = (d.tags || []).map(t => `<span>${t}</span>`).join("");
+  $("r-sub").textContent = `日柱 ${d.dayPillar}　生肖属${d.zodiac || "—"}`;
+  $("r-person").textContent = d.person;
+  $("r-strength").textContent = d.strength;
+  $("r-caution").textContent = d.caution;
+  $("r-fit").textContent = d.fit;
+  if (d.wikiKey) $("wiki-link").href = "/wiki/tiangan/" + d.wikiKey;
+  $("input-area").style.display = "none";
+  $("result").style.display = "block";
+  window.scrollTo(0, 0);
+}
+
+function sharePoster() {
+  if (!lastResult) return;
+  try {
+    SHARE.show(SHARE.rigePoster(lastResult), "我的日主人格.png");
+  } catch (e) {
+    alert("生成失败,请刷新页面后重试");
+  }
+}
+
+function reset() {
+  $("result").style.display = "none";
+  $("input-area").style.display = "block";
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>

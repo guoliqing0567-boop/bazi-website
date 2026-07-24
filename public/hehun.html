@@ -60,6 +60,7 @@
 <nav>
   <a href="/">排盘</a>
   <a href="/hehun.html" class="on">合婚</a>
+  <a href="/rige.html">日主</a>
   <a href="/today.html">黄历</a>
   <a href="/wiki">百科</a>
   <a href="/articles">文章</a>
@@ -133,8 +134,11 @@
     </div>
 
     <div class="ad-slot"><span>广告位 · AD</span></div>
+    <div class="act-row">
+      <button class="go" onclick="sharePoster()">生成分享图</button>
+      <button class="ghost" onclick="reset()">重新测算</button>
+    </div>
     <a class="cta" href="/">排一张自己的完整命盘</a>
-    <button class="ghost" onclick="reset()">重新测算</button>
   </div>
 </main>
 
@@ -145,6 +149,7 @@
 </p>
 
 <script src="/cities.js"></script>
+<script src="/share.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const EL_CN = { wood:"木", fire:"火", earth:"土", metal:"金", water:"水" };
@@ -208,7 +213,10 @@ async function calc() {
   }
 }
 
+let lastResult = null;
+
 function render(d) {
+  lastResult = d;
   const r = d.result;
   $("score").innerHTML = r.score + '<small>分</small>';
   $("bar").style.width = r.score + "%";
@@ -224,6 +232,15 @@ function render(d) {
   $("input-area").style.display = "none";
   $("result").style.display = "block";
   window.scrollTo(0, 0);
+}
+
+function sharePoster() {
+  if (!lastResult) return;
+  try {
+    SHARE.show(SHARE.hehunPoster(lastResult.a, lastResult.b, lastResult.result), "八字合婚结果.png");
+  } catch (e) {
+    alert("生成失败,请刷新页面后重试");
+  }
 }
 
 function reset() {

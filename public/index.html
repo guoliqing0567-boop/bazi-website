@@ -48,6 +48,7 @@
 <nav>
   <a href="/" class="on">排盘</a>
   <a href="/hehun.html">合婚</a>
+  <a href="/rige.html">日主</a>
   <a href="/today.html">黄历</a>
   <a href="/wiki">百科</a>
   <a href="/articles">文章</a>
@@ -144,7 +145,10 @@
       </div>
     </div>
 
-    <button class="ghost" onclick="reset()">重新排盘</button>
+    <div class="act-row">
+      <button class="go" onclick="sharePoster()">生成分享图</button>
+      <button class="ghost" onclick="reset()">重新排盘</button>
+    </div>
   </div>
 </main>
 
@@ -155,6 +159,7 @@
 </p>
 
 <script src="/cities.js"></script>
+<script src="/share.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -323,6 +328,15 @@ async function getReading() {
   } catch (e) {
     btn.disabled = false;
     btn.textContent = "生成解读(点击重试)";
+  }
+}
+
+function sharePoster() {
+  if (!currentChart) return;
+  try {
+    SHARE.show(SHARE.chartPoster(currentChart), "我的八字命盘.png");
+  } catch (e) {
+    alert("生成失败,请刷新页面后重试");
   }
 }
 
