@@ -75,6 +75,10 @@ function page({ title, desc, keywords, canonical, body }) {
   .ad-slot span { color:rgba(245,240,228,.28); font-size:11px; letter-spacing:3px; }
   .foot { text-align:center; color:rgba(245,240,228,.4); font-size:11px; margin-top:26px;
     line-height:2; letter-spacing:1px; padding:0 24px; }
+  .kv { display:flex; justify-content:space-between; font-size:14px; padding:7px 0;
+    border-bottom:1px dashed var(--line); }
+  .kv span:first-child { color:var(--faint); }
+  .card .kv:first-of-type { border-top:1px dashed var(--line); margin-top:14px; }
   .foot a { color:rgba(245,240,228,.55); }
 </style>
 </head>
@@ -82,7 +86,7 @@ function page({ title, desc, keywords, canonical, body }) {
 <header>
   <a class="logo" href="/"><h1 class="site">观 命</h1></a>
   <div class="sub">八字四柱 · 真太阳时排盘</div>
-  <nav><a href="/">排盘工具</a><a href="/articles">命理知识</a></nav>
+  <nav><a href="/">排盘</a><a href="/hehun.html">合婚</a><a href="/today.html">黄历</a><a href="/wiki">百科</a><a href="/articles">文章</a></nav>
 </header>
 ${body}
 <p class="foot">
@@ -142,10 +146,154 @@ app.get("/article/:slug", (req, res, next) => {
 });
 
 // 动态 sitemap:首页 + 列表页 + 所有文章,新增文章会自动出现
+// ============================================================
+//  命理百科:十天干 / 十二地支 / 十神,共 32 个条目页
+// ============================================================
+
+const WIKI = require("./wiki");
+const EL_CN_W = { wood:"木", fire:"火", earth:"土", metal:"金", water:"水" };
+
+const WIKI_CATS = {
+  tiangan: {
+    name: "十天干", items: WIKI.TIANGAN,
+    desc: "甲乙丙丁戊己庚辛壬癸,十个天干各自的五行属性、性格象征与适合领域。",
+    intro: "天干是八字的骨架之一。日柱天干代表你本人,称为「日主」,是整张命盘的原点。了解自己的日主属于哪一个天干,是读懂八字的第一步。",
+    label: i => `${i.char} · ${EL_CN_W[i.element]}(${i.polarity})`,
+  },
+  dizhi: {
+    name: "十二地支", items: WIKI.DIZHI,
+    desc: "子丑寅卯辰巳午未申酉戌亥,十二地支对应的生肖、月份、时辰与藏干。",
+    intro: "地支比天干复杂:它不仅有自己的五行属性,内部还「藏」着一到三个天干。地支同时用于纪年、月、日、时,是八字里信息量最大的部分。",
+    label: i => `${i.char} · 属${i.zodiac} · ${EL_CN_W[i.element]}`,
+  },
+  shishen: {
+    name: "十神", items: WIKI.SHISHEN,
+    desc: "比肩、劫财、食神、伤官、正财、偏财、正官、七杀、正印、偏印详解。",
+    intro: "十神是以日主为中心,衡量命局中其他干支与你之间关系的一套坐标。看懂十神,才算真正开始读一张命盘。",
+    label: i => `${i.name} · ${i.group}`,
+  },
+};
+
+// 百科总目录
+app.get("/wiki", (req, res) => {
+  const blocks = Object.entries(WIKI_CATS).map(([k, c]) => `
+    <div class="card">
+      <h2 style="font-size:19px">${c.name}</h2>
+      <p style="color:var(--faint);font-size:13px;line-height:1.9;margin:8px 0 14px">${esc(c.desc)}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${c.items.map(i => `<a href="/wiki/${k}/${i.key}" style="display:inline-block;background:var(--paper-2);
+          color:var(--ink);text-decoration:none;border-radius:10px;padding:8px 14px;font-size:15px">${esc(i.char || i.name)}</a>`).join("")}
+      </div>
+      <a href="/wiki/${k}" style="display:inline-block;margin-top:14px;font-size:13px;color:var(--cinnabar);text-decoration:none">查看 ${c.name} 全部 →</a>
+    </div>`).join("");
+  res.send(page({
+    title: "命理百科 · 天干地支十神详解 | 观命",
+    desc: "十天干、十二地支、十神的完整详解:五行属性、性格特质、适合领域与相互关系,一处查清。",
+    keywords: "命理百科,天干地支,十神详解,甲木,乙木,正官,七杀,地支藏干",
+    canonical: `${SITE}/wiki`,
+    body: `<div class="ad-slot"><span>广告位 · AD</span></div>${blocks}<a class="cta" href="/">去 排 盘</a>`,
+  }));
+});
+
+// 分类列表页
+app.get("/wiki/:cat", (req, res, next) => {
+  const c = WIKI_CATS[req.params.cat];
+  if (!c) return next();
+  const items = c.items.map(i => `
+    <a class="list-item" href="/wiki/${req.params.cat}/${i.key}">
+      <div class="t">${esc(c.label(i))}</div>
+      <div class="d">${esc(i.brief)}</div>
+    </a>`).join("");
+  res.send(page({
+    title: `${c.name}详解 · 观命命理百科`,
+    desc: c.desc, keywords: `${c.name},${c.items.map(i => i.char || i.name).join(",")}`,
+    canonical: `${SITE}/wiki/${req.params.cat}`,
+    body: `<div class="card"><h2 style="font-size:20px">${c.name}</h2>
+      <p style="margin-top:10px">${esc(c.intro)}</p></div>
+      <div class="ad-slot"><span>广告位 · AD</span></div>${items}
+      <a class="cta" href="/wiki">返回百科目录</a>`,
+  }));
+});
+
+// 条目详情页
+app.get("/wiki/:cat/:key", (req, res, next) => {
+  const c = WIKI_CATS[req.params.cat];
+  if (!c) return next();
+  const i = c.items.find(x => x.key === req.params.key);
+  if (!i) return next();
+  const idx = c.items.indexOf(i);
+  const nx = c.items[(idx + 1) % c.items.length];
+  const name = i.char || i.name;
+
+  let sections = "";
+  if (req.params.cat === "tiangan") {
+    sections = `
+      <div class="kv"><span>五行</span><span>${EL_CN_W[i.element]}</span></div>
+      <div class="kv"><span>阴阳</span><span>${i.polarity}</span></div>
+      <div class="kv"><span>象征</span><span>${esc(i.image)}</span></div>
+      <h3>本性与象征</h3><p>${esc(i.nature)}</p>
+      <h3>性格特质</h3><p>${esc(i.person)}</p>
+      <h3>长处</h3><p>${esc(i.strength)}</p>
+      <h3>需要留意</h3><p>${esc(i.caution)}</p>
+      <h3>适合的领域</h3><p>${esc(i.fit)}</p>
+      <h3>与其他干支的关系</h3><p>${esc(i.relations)}</p>`;
+  } else if (req.params.cat === "dizhi") {
+    sections = `
+      <div class="kv"><span>生肖</span><span>${i.zodiac}</span></div>
+      <div class="kv"><span>五行</span><span>${EL_CN_W[i.element]}(${i.polarity})</span></div>
+      <div class="kv"><span>对应月份</span><span>${esc(i.month)}</span></div>
+      <div class="kv"><span>对应时辰</span><span>${esc(i.time)}</span></div>
+      <div class="kv"><span>季节方位</span><span>${esc(i.season)} · ${esc(i.direction)}</span></div>
+      <div class="kv"><span>藏干</span><span>${esc(i.hidden)}</span></div>
+      <h3>本性与象征</h3><p>${esc(i.nature)}</p>
+      <h3>性格特质</h3><p>${esc(i.person)}</p>
+      <h3>合冲刑害</h3><p>${esc(i.note)}</p>`;
+  } else {
+    sections = `
+      <div class="kv"><span>所属类别</span><span>${esc(i.group)}</span></div>
+      <div class="kv"><span>与日主关系</span><span>${esc(i.relation)}</span></div>
+      <h3>含义</h3><p>${esc(i.meaning)}</p>
+      <h3>性格倾向</h3><p>${esc(i.person)}</p>
+      <h3>事业方向</h3><p>${esc(i.career)}</p>
+      <h3>感情特点</h3><p>${esc(i.love)}</p>
+      <h3>过旺时</h3><p>${esc(i.strong)}</p>
+      <h3>过弱时</h3><p>${esc(i.weak)}</p>`;
+  }
+
+  res.send(page({
+    title: `${name}是什么意思?${c.name}详解 · 观命`,
+    desc: i.brief,
+    keywords: `${name},${name}是什么意思,${name}性格,${c.name}`,
+    canonical: `${SITE}/wiki/${req.params.cat}/${i.key}`,
+    body: `
+      <div class="card">
+        <h2 style="font-size:34px;letter-spacing:4px">${esc(name)}</h2>
+        <div class="meta">${esc(c.label(i))} · ${c.name}</div>
+        <p style="color:var(--faint)">${esc(i.brief)}</p>
+        ${sections}
+      </div>
+      <div class="ad-slot"><span>广告位 · AD</span></div>
+      <a class="cta" href="/">排一张自己的命盘看看</a>
+      <a class="list-item" href="/wiki/${req.params.cat}/${nx.key}">
+        <div class="d">下一个</div>
+        <div class="t">${esc(c.label(nx))}</div>
+      </a>
+      <p style="text-align:center;margin-top:14px">
+        <a href="/wiki/${req.params.cat}" style="color:rgba(245,240,228,.6);font-size:13px">← 返回${c.name}目录</a>
+      </p>`,
+  }));
+});
+
 app.get("/sitemap.xml", (req, res) => {
   const urls = [
     { loc: `${SITE}/`, pri: "1.0", freq: "weekly" },
+    { loc: `${SITE}/hehun.html`, pri: "0.9", freq: "monthly" },
+    { loc: `${SITE}/today.html`, pri: "0.9", freq: "daily" },
     { loc: `${SITE}/articles`, pri: "0.8", freq: "weekly" },
+    { loc: `${SITE}/wiki`, pri: "0.8", freq: "monthly" },
+    ...Object.keys(WIKI_CATS).map(k => ({ loc: `${SITE}/wiki/${k}`, pri: "0.7", freq: "monthly" })),
+    ...Object.entries(WIKI_CATS).flatMap(([k, c]) =>
+      c.items.map(i => ({ loc: `${SITE}/wiki/${k}/${i.key}`, pri: "0.6", freq: "monthly" }))),
     ...ARTICLES.map(a => ({ loc: `${SITE}/article/${a.slug}`, pri: "0.7", freq: "monthly" })),
   ];
   res.type("application/xml").send(
@@ -338,6 +486,184 @@ app.post("/api/interpret", async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: "解读生成失败,请重试" });
   }
+});
+
+// ============================================================
+//  八字合婚:两张命盘的匹配分析
+// ============================================================
+
+const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const SIX_HE = { 子:"丑", 丑:"子", 寅:"亥", 亥:"寅", 卯:"戌", 戌:"卯", 辰:"酉", 酉:"辰", 巳:"申", 申:"巳", 午:"未", 未:"午" };
+const SAN_HE = [["申","子","辰"], ["亥","卯","未"], ["寅","午","戌"], ["巳","酉","丑"]];
+const CHONG = { 子:"午", 午:"子", 丑:"未", 未:"丑", 寅:"申", 申:"寅", 卯:"酉", 酉:"卯", 辰:"戌", 戌:"辰", 巳:"亥", 亥:"巳" };
+const HAI = { 子:"未", 未:"子", 丑:"午", 午:"丑", 寅:"巳", 巳:"寅", 卯:"辰", 辰:"卯", 申:"亥", 亥:"申", 酉:"戌", 戌:"酉" };
+const SHENG = { wood:"fire", fire:"earth", earth:"metal", metal:"water", water:"wood" };
+const KE = { wood:"earth", earth:"water", water:"fire", fire:"metal", metal:"wood" };
+
+function elementCount(c) {
+  const n = { wood:0, fire:0, earth:0, metal:0, water:0 };
+  for (const k of ["year","month","day","hour"]) {
+    n[c.pillars[k].element]++;
+    n[c.pillars[k].branchElement]++;
+    (c.pillars[k].hiddenStems || []).forEach(h => { if (!h.isMain) n[h.element] += 0.5; });
+  }
+  return n;
+}
+
+function hehunAnalyze(a, b) {
+  const ea = a.dayMaster.element, eb = b.dayMaster.element;
+  const items = [];
+  let score = 60;
+
+  // 1. 日主关系(核心:代表两个人本身的相处基调)
+  let dmText, dmLabel;
+  if (ea === eb) {
+    dmLabel = "同气相求"; score += 8;
+    dmText = `双方日主同为${EL_CN[ea]},性情相近、想法容易同步,天然有默契。要留心的是优点缺点也相似,遇到问题时容易一起钻牛角尖,需要有人先退一步。`;
+  } else if (SHENG[ea] === eb) {
+    dmLabel = "你生对方"; score += 12;
+    dmText = `你的日主${EL_CN[ea]}生对方的${EL_CN[eb]},你在这段关系里更主动、更愿意付出,对方在你身边容易被滋养、被托举。长久之道在于对方懂得回馈,否则你会觉得累。`;
+  } else if (SHENG[eb] === ea) {
+    dmLabel = "对方生你"; score += 12;
+    dmText = `对方日主${EL_CN[eb]}生你的${EL_CN[ea]},对方是这段关系里的给予者,你会感到被照顾、被支持。记得把这份好看在眼里、说出口,关系才能持久。`;
+  } else if (KE[ea] === eb) {
+    dmLabel = "你克对方"; score -= 5;
+    dmText = `你的日主${EL_CN[ea]}克对方的${EL_CN[eb]},相处中你比较强势、主导性强。这不必然是坏事——若对方性格柔和,反而结构稳定;但若对方也刚,就要注意别把关系变成较劲。`;
+  } else {
+    dmLabel = "对方克你"; score -= 5;
+    dmText = `对方日主${EL_CN[eb]}克你的${EL_CN[ea]},对方在关系中话语权更重,你容易迁就。适度的迁就是包容,长期的压抑则会积怨,该表达的需求要说出来。`;
+  }
+  items.push({ title: `日主关系 · ${dmLabel}`, text: dmText });
+
+  // 2. 五行互补(看彼此能否补上对方的短板)
+  const na = elementCount(a), nb = elementCount(b);
+  const weakA = Object.entries(na).sort((x,y) => x[1]-y[1])[0][0];
+  const weakB = Object.entries(nb).sort((x,y) => x[1]-y[1])[0][0];
+  const strongA = Object.entries(na).sort((x,y) => y[1]-x[1])[0][0];
+  const strongB = Object.entries(nb).sort((x,y) => y[1]-x[1])[0][0];
+  let buText = "";
+  let buCount = 0;
+  if (strongB === weakA) { buCount++; buText += `对方${EL_CN[strongB]}旺,正好补上你命局中偏弱的${EL_CN[weakA]};`; }
+  if (strongA === weakB) { buCount++; buText += `你的${EL_CN[strongA]}充足,也能补对方偏弱的${EL_CN[weakB]};`; }
+  if (buCount === 2) { score += 12; buText = "双向互补——" + buText + "这是很难得的配置,两个人在一起比各自单独时更完整。"; }
+  else if (buCount === 1) { score += 7; buText = "单向互补——" + buText + "被补的一方会明显感到轻松,另一方需要留意别只顾着付出。"; }
+  else {
+    buText = `你偏弱的是${EL_CN[weakA]},对方偏弱的是${EL_CN[weakB]}` +
+      (weakA === weakB ? ",两人短板相同,遇到相关问题时容易一起犯难,建议有意识地在外部寻找支持。"
+                       : ",彼此的短板不同也不互补,关系更依赖后天经营而非先天契合。");
+  }
+  items.push({ title: "五行互补", text: buText });
+
+  // 3. 地支关系(日支代表配偶宫,权重最高;年支代表家庭背景)
+  const da = a.pillars.day.branch, db = b.pillars.day.branch;
+  const ya = a.pillars.year.branch, yb = b.pillars.year.branch;
+  const rels = [];
+  const check = (x, y, label) => {
+    if (SIX_HE[x] === y) { score += 10; rels.push(`${label}${x}${y}<b>六合</b>,亲近感强、彼此看着顺眼`); }
+    else if (SAN_HE.some(g => g.includes(x) && g.includes(y))) { score += 8; rels.push(`${label}${x}${y}<b>三合</b>,合作顺畅、目标一致`); }
+    else if (CHONG[x] === y) { score -= 10; rels.push(`${label}${x}${y}<b>相冲</b>,容易起摩擦、想法常对着来`); }
+    else if (HAI[x] === y) { score -= 6; rels.push(`${label}${x}${y}<b>相害</b>,小事上易生嫌隙,需要多解释`); }
+    else if (x === y) { score += 3; rels.push(`${label}同为${x},节奏相似、生活习惯接近`); }
+  };
+  check(da, db, "日支(配偶宫)");
+  check(ya, yb, "年支(生肖)");
+  items.push({
+    title: "地支互动",
+    text: rels.length ? rels.join(";") + "。" +
+      (rels.some(r => r.includes("相冲")) ? "有冲不代表不能在一起,现实中很多相冲的伴侣反而互相成就,关键是把冲突转化成沟通。" : "")
+      : "两人地支之间没有明显的合冲刑害,关系平淡稳定,少激烈起伏,也少剧烈摩擦——这种配置更考验用心经营。",
+  });
+
+  // 4. 生肖参考
+  const za = (a.calendar && a.calendar.zodiac) || "—", zb = (b.calendar && b.calendar.zodiac) || "—";
+  items.push({
+    title: "生肖参考",
+    text: `你属${za},对方属${zb}。生肖只看年支,是八字里最粗的一层信息,民间说的「属相不合」往往夸大了它的分量。真正决定相处质量的是日主关系和日支互动,也就是上面几项——如果那几项和谐,生肖上的说法不必挂在心上。`,
+  });
+
+  score = Math.max(35, Math.min(96, Math.round(score)));
+  let verdict;
+  if (score >= 85) verdict = "契合度很高。两人无论性情还是命局结构都相当合拍,是那种「相处起来不费劲」的组合。";
+  else if (score >= 72) verdict = "整体和谐。有天然的默契基础,也有需要磨合的地方,属于用心经营就能越走越好的类型。";
+  else if (score >= 58) verdict = "各有长短。既有相合之处也有需要让步的地方,关系走向更多取决于两个人的意愿而非先天配置。";
+  else verdict = "需要多花心思。命局层面的摩擦点较多,但这从来不是判决书——现实里靠沟通和包容走得很好的组合比比皆是。";
+
+  return { score, verdict, items };
+}
+
+app.post("/api/hehun", (req, res) => {
+  try {
+    const { a, b } = req.body || {};
+    const build = x => calculateBaziChart({
+      year: Number(x.year), month: Number(x.month), day: Number(x.day),
+      hour: Number(x.hour), minute: Number(x.minute) || 0,
+      gender: x.gender === "male" ? "male" : "female",
+      calendarType: x.calendarType === "lunar" ? "lunar" : "solar",
+      longitude: x.longitude !== undefined ? Number(x.longitude) : undefined,
+      timezone: x.timezone !== undefined ? Number(x.timezone) : undefined,
+      enableTrueSolarTime: x.longitude !== undefined,
+    });
+    const ca = build(a || {}), cb = build(b || {});
+    res.json({ ok: true, a: ca, b: cb, result: hehunAnalyze(ca, cb) });
+  } catch (e) {
+    const msg = e instanceof BaziInputError ? e.message : "请检查双方的出生日期时间是否填写正确";
+    res.status(400).json({ ok: false, error: msg });
+  }
+});
+
+// ============================================================
+//  今日黄历:当天干支、建除十二神、宜忌、冲煞
+// ============================================================
+
+// 建除十二神:以月支为建,日支顺次而行
+const JIAN_CHU = [
+  { n: "建", yi: ["外出", "求学", "面试", "开始新计划"], ji: ["动土", "搬家", "大额支出"], d: "万物生发之日,适合起头,不宜大动干戈。" },
+  { n: "除", yi: ["打扫", "看病", "断舍离", "清理旧账"], ji: ["赴任", "签约", "开张"], d: "除旧布新之日,清理比开创更合时宜。" },
+  { n: "满", yi: ["祈福", "聚会", "收获性的事"], ji: ["服药", "下葬"], d: "圆满丰盈之日,宜守成庆贺,不宜起争。" },
+  { n: "平", yi: ["谈判", "调解", "修缮", "常规事务"], ji: ["求财冒进", "投机"], d: "平稳无奇之日,按部就班最好。" },
+  { n: "定", yi: ["签约", "订婚", "定方案", "入职"], ji: ["诉讼", "远行"], d: "尘埃落定之日,适合把悬而未决的事敲定。" },
+  { n: "执", yi: ["立规矩", "追讨", "整理", "执行既定计划"], ji: ["开张", "搬家"], d: "执守之日,守住已有的比追求新的更稳妥。" },
+  { n: "破", yi: ["拆除", "看病", "了结旧事"], ji: ["婚嫁", "开业", "签约"], d: "破败冲克之日,宜破不宜立,重要决定改期为好。" },
+  { n: "危", yi: ["安分守己", "静养"], ji: ["登高", "冒险", "远行", "重大决策"], d: "危险警示之日,收敛为上,凡事留三分余地。" },
+  { n: "成", yi: ["开业", "结婚", "签约", "入学", "几乎百事可行"], ji: ["诉讼"], d: "成就之日,是一个月里最适合做大事的日子之一。" },
+  { n: "收", yi: ["收账", "储蓄", "收获", "整理归档"], ji: ["出行", "开张"], d: "收敛入库之日,宜收不宜放。" },
+  { n: "开", yi: ["开业", "开工", "祈福", "出行", "启动新事"], ji: ["下葬", "动土"], d: "开通启达之日,适合开始与出发。" },
+  { n: "闭", yi: ["收尾", "填补", "储蓄", "闭门修养"], ji: ["开业", "手术", "求医"], d: "闭藏之日,宜守宜藏,不宜张扬。" },
+];
+const ZODIAC_OF_BRANCH = { 子:"鼠", 丑:"牛", 寅:"虎", 卯:"兔", 辰:"龙", 巳:"蛇", 午:"马", 未:"羊", 申:"猴", 酉:"鸡", 戌:"狗", 亥:"猪" };
+
+function todayInfo(d = new Date()) {
+  // 用当天正午排盘,取年月日干支(正午不受子时换日争议影响)
+  const c = calculateBaziChart({
+    year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate(),
+    hour: 12, minute: 0, gender: "male", calendarType: "solar",
+  });
+  const dayBranch = c.pillars.day.branch, monthBranch = c.pillars.month.branch;
+  const idx = (BRANCHES.indexOf(dayBranch) - BRANCHES.indexOf(monthBranch) + 12) % 12;
+  const jc = JIAN_CHU[idx];
+  const chongBranch = CHONG[dayBranch];
+  const lunar = (c.calendar && c.calendar.lunar) || {};
+  return {
+    date: `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`,
+    week: "日一二三四五六"[d.getDay()],
+    ganzhi: {
+      year: c.pillars.year.ganZhi, month: c.pillars.month.ganZhi, day: c.pillars.day.ganZhi,
+    },
+    dayStem: c.pillars.day.stem, dayBranch,
+    dayElement: EL_CN[c.pillars.day.element],
+    naYin: c.pillars.day.naYin,
+    zodiac: (c.calendar && c.calendar.zodiac) || "",
+    lunar: `农历${lunar.isLeapMonth ? "闰" : ""}${lunar.month || "?"}月${lunar.day || "?"}日`,
+    jianchu: jc.n, jianchuDesc: jc.d,
+    yi: jc.yi, ji: jc.ji,
+    chong: `${ZODIAC_OF_BRANCH[dayBranch]}日冲${ZODIAC_OF_BRANCH[chongBranch]}`,
+    chongNote: `属${ZODIAC_OF_BRANCH[chongBranch]}的朋友今天诸事宜缓,重要决定可以往后放一放。`,
+  };
+}
+
+app.get("/api/today", (req, res) => {
+  try { res.json({ ok: true, today: todayInfo() }); }
+  catch (e) { res.status(500).json({ ok: false, error: "获取失败" }); }
 });
 
 app.listen(PORT, () => {
